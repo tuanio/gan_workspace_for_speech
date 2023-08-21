@@ -1,7 +1,7 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy
 checkpoints_dir=checkpoints/
-gpu_ids=1
+gpu_ids=0,1,2,3
 config=pretrain_raw_feat_5h_5h_200epochs
 
 python pretrain.py \
@@ -17,7 +17,7 @@ python pretrain.py \
     --load_size_w 128 \
     --crop_size 128 \
     --preprocess none \
-    --batch_size 128 \
+    --batch_size 256 \
     --niter 50 \
     --niter_decay 0 \
     --gpu_ids $gpu_ids \
@@ -38,7 +38,7 @@ python pretrain.py \
     --freq-width 25 \
     --freq-masks 2 \
     --beta1 0.9 \
-    --lr 0.00125 \
+    --lr 0.0025 \
     --lr_policy cosine \
     --use-wandb \
     --wandb-project GAN_for_CD92 \
