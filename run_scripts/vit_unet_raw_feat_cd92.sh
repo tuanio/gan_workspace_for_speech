@@ -2,6 +2,7 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy
 checkpoints_dir=checkpoints/
+gen_pretrained_path=for_example_
 gpu_ids=0
 config=raw_feat
 
@@ -39,5 +40,6 @@ python train.py \
     --no_html \
     --num_threads 8 \
     --use-wandb \
+    --gen-pretrained-path $gen_pretrained_path \
     --wandb-project GAN_for_CD92 \
     --wandb-run-name vit_unet_${config}
