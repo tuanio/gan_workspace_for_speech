@@ -133,8 +133,8 @@ class ViTUnetModel(BaseModel):
         loss_D_fake = self.criterionGAN(pred_fake, False)
         # Combined loss and calculate gradients
         loss_D = (loss_D_real + loss_D_fake) * 0.5
-        gp = networks.cal_gradient_penalty(netD, real_data=pred_real,
-                        fake_data=pred_fake, device=pred_real.device,
+        gp = networks.cal_gradient_penalty(netD, real_data=real,
+                        fake_data=fake.detach(), device=real.device,
                         constant=self.opt.constant_gp,
                         lambda_gp=self.opt.lambda_gp)
         loss_D += gp
