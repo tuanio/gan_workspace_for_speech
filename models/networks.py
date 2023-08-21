@@ -5,7 +5,7 @@ import functools
 from torch.optim import lr_scheduler
 import torch.nn.functional as F
 from .networks_unet_vit import MaskViTUNetGenerator
-from .networks_unet_conformer import MaskConformerUnetGenerator
+from .networks_unet_conformer import MaskConformerUNetGenerator
 
 ###############################################################################
 # Helper Functions
