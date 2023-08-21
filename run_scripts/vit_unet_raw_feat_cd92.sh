@@ -40,4 +40,4 @@ python train.py \
     --num_threads 8 \
     --use-wandb \
     --wandb-project GAN_for_CD92 \
-    --wandb-run-name unet_gan_${config}
+    --wandb-run-name vit_unet_${config}

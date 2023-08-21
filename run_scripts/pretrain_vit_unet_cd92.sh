@@ -18,7 +18,6 @@ python pretrain.py \
     --preprocess none \
     --batch_size 64 \
     --niter 200 \
-    --niter_decay 200 \
     --gpu_ids $gpu_ids \
     --display_id 0 \
     --display_freq 200 \
@@ -38,6 +37,7 @@ python pretrain.py \
     --freq-masks 2 \
     --beta1 0.9 \
     --lr 0.00062 \
+    --lr-policy cosine \
     --use-wandb \
     --wandb-project GAN_for_CD92 \
-    --wandb-run-name vit_unet_${config}
+    --wandb-run-name pretrain_vit_unet_${config}
