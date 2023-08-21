@@ -13,7 +13,7 @@ python train.py \
     --norm instance \
     --lambda_A 10 \
     --lambda_B 10 \
-    --lambda_identity 5 \
+    --lambda_identity 0.5 \
     --load_size_h 129 \
     --load_size_w 128 \
     --crop_size 128 \
