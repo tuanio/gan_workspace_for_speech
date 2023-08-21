@@ -92,7 +92,7 @@ class ViTUnetModel(BaseModel):
             disc_parameters = itertools.chain(self.netD_A.parameters(), self.netD_B.parameters(), self.netD2_A.parameters(), self.netD2_B.parameters()) if opt.use_cycled_discriminators else itertools.chain(self.netD_A.parameters(), self.netD_B.parameters())
             self.optimizer_D = torch.optim.Adam(disc_parameters, lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
-            self.optimizers.append(self.optimizer_D)
+            self.optimizers.append(self.optimizer_D) 
 
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
@@ -141,7 +141,7 @@ class ViTUnetModel(BaseModel):
         # Combined loss and calculate gradients
         loss_D = (loss_D_real + loss_D_fake) * 0.5
         gp = networks.cal_gradient_penalty(netD, real_data=real,
-                        fake_data=fake.detach(), device=real.device,
+                        fake_data=fake.detach(), device=self.device,
                         constant=self.opt.constant_gp,
                         lambda_gp=self.opt.lambda_gp)
         loss_D += gp[0]

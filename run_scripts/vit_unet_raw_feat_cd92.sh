@@ -3,7 +3,7 @@ data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy
 checkpoints_dir=checkpoints/
 gen_pretrained_path=/home/stud_vantuan/projects/aug_asr/gan_workspace_for_speech/checkpoints/vit_unet_pretrain/latest_net_G.pth
-gpu_ids=0,1,2,3
+gpu_ids=0
 config=pretrain_raw_feat
 
 python train.py \
