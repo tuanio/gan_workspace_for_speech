@@ -18,6 +18,7 @@ python pretrain.py \
     --preprocess none \
     --batch_size 64 \
     --niter 200 \
+    --niter_decay 0 \
     --gpu_ids $gpu_ids \
     --display_id 0 \
     --display_freq 200 \

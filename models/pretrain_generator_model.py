@@ -6,10 +6,11 @@ from . import networks
 
 
 class PretrainGeneratorModel(BaseModel):
+
     @staticmethod
     def modify_commandline_options(parser, is_train=True):
         parser.set_defaults(no_dropout=True)  # default CycleGAN did not use dropout
-        parser.add_argument('--model-name', type=str, name='vit_unet_mask')
+        parser.add_argument('--model_name', type=str, default='vit_unet_mask')
         return parser
 
     def __init__(self, opt):
