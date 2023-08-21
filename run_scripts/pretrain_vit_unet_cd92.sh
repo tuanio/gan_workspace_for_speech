@@ -38,7 +38,7 @@ python pretrain.py \
     --freq-masks 2 \
     --beta1 0.9 \
     --lr 0.00062 \
-    --lr-policy cosine \
+    --lr_policy cosine \
     --use-wandb \
     --wandb-project GAN_for_CD92 \
     --wandb-run-name pretrain_vit_unet_${config}
