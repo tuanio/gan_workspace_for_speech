@@ -1,8 +1,8 @@
 # this one train viunet with raw feat from 5h
-# data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
-data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy
+data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
+# data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy
 checkpoints_dir=checkpoints/
-gpu_ids=1
+gpu_ids=0
 config=raw_feat
 
 python train.py \
