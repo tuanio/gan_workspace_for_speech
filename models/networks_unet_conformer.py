@@ -558,12 +558,15 @@ class PixelwiseConformer(nn.Module):
 class MaskConformerUNetGenerator(nn.Module):
     # (2.02, 2) -> conv kernel size 3 will become 129x128
     def __init__(
-        self, in_c, out_c, features, n_heads, n_blocks, feed_forward_expansion_factor, conv_expansion_factor, dropout_p, image_shape, unet_features_list, unet_activ, unet_norm,
+        self, in_c, out_c, features, n_heads, n_blocks,
+        feed_forward_expansion_factor, conv_expansion_factor, dropout_p,
+        image_shape, unet_features_list, unet_activ, unet_norm,
         unet_downsample = 'conv',
         unet_upsample   = 'upsample-conv',
         unet_rezero     = False,
         rezero          = True,
         activ_output    = None,
+        conv_kernel_size = 31,
         up_scale_factors=(2, 2, 2, (2.02, 2)),
         **kwargs
     ):
