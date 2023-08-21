@@ -19,8 +19,8 @@ python train.py \
     --crop_size 128 \
     --preprocess none \
     --batch_size 32 \
-    --niter 100 \
-    --niter_decay 50 \
+    --niter 70 \
+    --niter_decay 30 \
     --gpu_ids $gpu_ids \
     --display_id 0 \
     --display_freq 200 \
