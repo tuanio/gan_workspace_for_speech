@@ -2,7 +2,7 @@ data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy
 checkpoints_dir=checkpoints/
 gpu_ids=1
-config=pretrain
+config=pretrain_raw_feat_5h_5h_200epochs
 
 python pretrain.py \
     --dataroot $data_cache \
