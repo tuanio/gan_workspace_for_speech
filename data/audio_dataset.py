@@ -222,7 +222,7 @@ class AudioDataset(BaseDataset):
         # Generating mask (for filling in frames) if required 
         if self.opt.is_pretrain:
             # ---
-            mask = np.ones_like(A)
+            mask = torch.ones_like(A)
             sh = mask.shape
             for i in range(self.opt.freq_masks):
                 x_left = np.random.randint(
