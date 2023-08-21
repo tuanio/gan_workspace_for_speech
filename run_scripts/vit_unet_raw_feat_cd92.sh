@@ -2,7 +2,7 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy
 checkpoints_dir=checkpoints/
-gen_pretrained_path=/home/stud_vantuan/projects/aug_asr/gan_workspace_for_speech/checkpoints/vit_unet_pretrain/latest_net_G.pth
+gen_pretrained_path=/home/stud_vantuan/projects/aug_asr/gan_workspace_for_speech/checkpoints/vit_unet_pretrain_raw_feat_5h_5h_200epochs/latest_net_G.pth
 gpu_ids=0
 config=pretrain_raw_feat_5h_5h_150epochs
 
@@ -23,7 +23,7 @@ python train.py \
     --load_size_w 128 \
     --crop_size 128 \
     --preprocess none \
-    --batch_size 16 \
+    --batch_size 32 \
     --niter 100 \
     --niter_decay 50 \
     --gpu_ids $gpu_ids \
