@@ -1,0 +1,7 @@
+data_cache
+checkpoints
+results
+codec2
+temp
+metrics/*.wav
+results/*

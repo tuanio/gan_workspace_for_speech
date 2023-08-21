@@ -1,0 +1,33 @@
+python test.py \
+    --dataroot $data/cache/librispeech/test_clean \
+    --name speech_attention_gan_librispeech_helicopter \
+    --model attention_gan \
+    --dataset_mode audio \
+    --norm instance \
+    --phase test \
+    --no_dropout \
+    --load_size_h 128 \
+    --load_size_w 128 \
+    --crop_size 128 \
+    --batch_size 1 \
+    --gpu_ids 3 \
+    --input_nc 1 \
+    --output_nc 1 \
+    --use_mask
+
+python test.py \
+    --dataroot $data/cache/librispeech/test_clean_reverse \
+    --name speech_attention_gan_librispeech_helicopter \
+    --model attention_gan \
+    --dataset_mode audio \
+    --norm instance \
+    --phase test \
+    --no_dropout \
+    --load_size_h 128 \
+    --load_size_w 128 \
+    --crop_size 128 \
+    --batch_size 1 \
+    --gpu_ids 3 \
+    --input_nc 1 \
+    --output_nc 1 \
+    --use_mask
