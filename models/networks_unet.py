@@ -1,6 +1,6 @@
 import torch 
 from torch import nn
-from .utils import get_norm_layer, get_downsample_x2_layer, get_upsample_x2_layer
+from .utils import get_norm_layer, get_downsample_x2_layer, get_upsample_x2_layer, get_activ_layer
 
 class UnetBasicBlock(nn.Module):
 
