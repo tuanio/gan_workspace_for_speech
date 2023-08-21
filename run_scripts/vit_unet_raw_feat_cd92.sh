@@ -25,7 +25,7 @@ python train.py \
     --preprocess none \
     --batch_size 16 \
     --niter 100 \
-    --niter_decay 100 \
+    --niter_decay 50 \
     --gpu_ids $gpu_ids \
     --display_id 0 \
     --display_freq 200 \
