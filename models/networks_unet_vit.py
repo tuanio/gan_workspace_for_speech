@@ -553,8 +553,6 @@ class UNetBlock(nn.Module):
         # y : (N, C_inner, H_inner, W_inner)
         y = self.inner_module(y)
 
-        print("ViT:", y.size())
-
         # y : (N, C, H, W)
         y = self.deconv(y, r)
 
