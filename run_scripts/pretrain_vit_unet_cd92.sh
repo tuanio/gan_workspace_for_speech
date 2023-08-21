@@ -7,7 +7,7 @@ python pretrain.py \
     --dataroot $data_cache \
     --name vit_unet_${config} \
     --model pretrain_generator \
-    --model-name vit_unet_mask \
+    --model_name vit_unet_mask \
     --dataset_mode audio \
     --pool_size 50 \
     --no_dropout \
