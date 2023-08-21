@@ -147,7 +147,6 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
     The generator has been initialized by <init_net>. It uses RELU for non-linearity.
     """
 
-    print("Select netG:", netG)
     net = None
     norm_layer = get_norm_layer(norm_type=norm)
 
@@ -182,8 +181,7 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
             'up_scale_factors'   : ((2.02, 2), 2, 2, 2),
             'image_shape'        : (1, 129, 128)
         }
-        netG = MaskViTUNetGenerator(**cfg)
-        print("Going here")
+        net = MaskViTUNetGenerator(**cfg)
     elif netG == 'our':
         if use_mask:
             net = ResnetGenerator_mask(input_nc+1, output_nc, ngf, raw_feat, n_blocks=9)
@@ -192,7 +190,6 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
     elif netG == 'deep_conformer': # further edit
         #net = MaskConformerGenerator()
         pass
-        
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % netG)
     return init_net(net, init_type, init_gain, gpu_ids)
