@@ -1,6 +1,6 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
 checkpoints_dir=checkpoints/
-gpu_ids=0,1,2,3
+gpu_ids=3
 config=raw_feat_5h_5h_150epochs
 
 python train.py \
