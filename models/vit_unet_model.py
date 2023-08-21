@@ -54,8 +54,12 @@ class ViTUnetModel(BaseModel):
         if self.opt.gen_pretrained_path is not None:
             print(f"Loading pretrained of Generator from [{self.opt.gen_pretrained_path}]")
             ckpt = torch.load(self.opt.gen_pretrained_path)
-            self.netG_A.load_state_dict(ckpt)
-            self.netG_B.load_state_dict(ckpt)
+            if not isinstance(self.netG_A, nn.Module):
+                print("Initialize netG_A with pretrained:", self.netG_A.module.load_state_dict(ckpt))
+                print("Initialize netG_A with pretrained:", self.netG_B.module.load_state_dict(ckpt))
+            else:
+                print("Initialize netG_A with pretrained:", self.netG_A.load_state_dict(ckpt))
+                print("Initialize netG_A with pretrained:", self.netG_B.load_state_dict(ckpt))
 
         if self.isTrain:  # define discriminators
             self.netD_A = networks.define_D(opt.output_nc, opt.ndf, opt.netD,
