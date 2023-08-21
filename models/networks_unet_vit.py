@@ -669,7 +669,7 @@ class MaskViTUNetGenerator(nn.Module):
 
     def forward(self, x, m):
         # x : (N, C, H, W)
-        x = torch.cat([x, m], dim=1)
+        x = torch.cat([x * m, m], dim=1)
         result = self.net(x)
 
         return self.output(result)

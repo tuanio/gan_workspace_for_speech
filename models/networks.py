@@ -146,10 +146,10 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
 
     The generator has been initialized by <init_net>. It uses RELU for non-linearity.
     """
+
+    print("Select netG:", netG)
     net = None
     norm_layer = get_norm_layer(norm_type=norm)
-
-    
 
     if netG == 'resnet_9blocks':
         net = ResnetGenerator(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=9)
@@ -183,6 +183,7 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
             'image_shape'        : (1, 129, 128)
         }
         netG = MaskViTUNetGenerator(**cfg)
+        print("Going here")
     elif netG == 'our':
         if use_mask:
             net = ResnetGenerator_mask(input_nc+1, output_nc, ngf, raw_feat, n_blocks=9)
