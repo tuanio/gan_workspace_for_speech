@@ -2,14 +2,14 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy
 checkpoints_dir=checkpoints/
-gen_pretrained_path=/home/stud_vantuan/projects/aug_asr/gan_workspace_for_speech/checkpoints/vit_unet_pretrain_raw_feat_5h_5h_200epochs/latest_net_G.pth
-gpu_ids=0
+gen_pretrained_path=/home/stud_vantuan/projects/aug_asr/gan_workspace_for_speech/checkpoints/conformer_unet_pretrain_raw_feat_5h_5h_50epochs/latest_net_G.pth
+gpu_ids=2
 config=with_pretrain_raw_feat_5h_5h_150epochs
 
 python train.py \
     --dataroot $data_cache \
-    --name vit_unet_${config} \
-    --model vit_unet \
+    --name conformer_unet_${config} \
+    --model conformer_unet \
     --dataset_mode audio \
     --pool_size 50 \
     --no_dropout \
@@ -42,4 +42,4 @@ python train.py \
     --use-wandb \
     --gen-pretrained-path $gen_pretrained_path \
     --wandb-project GAN_for_CD92 \
-    --wandb-run-name vit_unet_${config}
+    --wandb-run-name conformer_unet_${config}

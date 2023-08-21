@@ -5,7 +5,7 @@ import functools
 from torch.optim import lr_scheduler
 import torch.nn.functional as F
 from .networks_unet_vit import MaskViTUNetGenerator
-
+from .networks_unet_conformer import MaskConformerUnetGenerator
 
 ###############################################################################
 # Helper Functions
@@ -182,14 +182,33 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
             'image_shape'        : (1, 129, 128)
         }
         net = MaskViTUNetGenerator(**cfg)
+    elif netG == 'conformer_unet_mask':
+        cfg = {
+            'in_c'               : input_nc + 1,
+            'out_c'              : output_nc,   
+            'features'           : 384,
+            'n_heads'            : 6,
+            'n_blocks'           : 12,
+            'feed_forward_expansion_factor': 4,
+            'conv_expansion_factor': 2,
+            'unet_features_list' : [48, 96, 192, 384],
+            'unet_activ'         : 'leakyrelu',
+            'unet_norm'          : 'instance',
+            'unet_downsample'    : 'conv',
+            'unet_upsample'      : 'upsample-conv',
+            'rezero'             : True,
+            'activ_output'       : 'linear',
+            'dropout_p'          : 0.0,
+            'conv_kernel_size'   : 31,
+            'up_scale_factors'   : ((2.02, 2), 2, 2, 2),
+            'image_shape'        : (1, 129, 128)
+        }
+        net = MaskConformerUNetGenerator(**cfg)
     elif netG == 'our':
         if use_mask:
             net = ResnetGenerator_mask(input_nc+1, output_nc, ngf, raw_feat, n_blocks=9)
         else:
             net = ResnetGenerator_our(input_nc, output_nc, ngf, n_blocks=9)
-    elif netG == 'deep_conformer': # further edit
-        #net = MaskConformerGenerator()
-        pass
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % netG)
     return init_net(net, init_type, init_gain, gpu_ids)
