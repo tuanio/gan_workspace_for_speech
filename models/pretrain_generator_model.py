@@ -5,7 +5,7 @@ from .base_model import BaseModel
 from . import networks
 
 
-class PretrainGenerator(BaseModel):
+class PretrainGeneratorModel(BaseModel):
     @staticmethod
     def modify_commandline_options(parser, is_train=True):
         parser.set_defaults(no_dropout=True)  # default CycleGAN did not use dropout
