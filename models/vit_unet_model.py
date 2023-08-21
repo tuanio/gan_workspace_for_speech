@@ -137,7 +137,7 @@ class ViTUnetModel(BaseModel):
                         fake_data=fake.detach(), device=real.device,
                         constant=self.opt.constant_gp,
                         lambda_gp=self.opt.lambda_gp)
-        loss_D += gp
+        loss_D += gp[0]
         loss_D.backward()
         return loss_D
 
