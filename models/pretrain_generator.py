@@ -15,7 +15,7 @@ class PretrainGenerator(BaseModel):
     def __init__(self, opt):
         BaseModel.__init__(self, opt)
         if self.isTrain:
-            self.loss_names = ['l1_loss']
+            self.loss_names = ['l1']
         if self.isTrain:
             self.model_names = ['G']
 
