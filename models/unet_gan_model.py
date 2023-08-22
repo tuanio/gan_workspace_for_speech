@@ -128,7 +128,7 @@ class UnetGANModel(BaseModel):
         loss_D = (loss_D_real + loss_D_fake) * 0.5 + networks.cal_gradient_penalty(netD, real_data=real,
                                                             fake_data=fake.detach(), device=self.device,
                                                             constant=self.opt.constant_gp,
-                                                            lambda_gp=self.opt.lambda_gp)
+                                                            lambda_gp=self.opt.lambda_gp)[0]
         loss_D.backward()
         return loss_D
 
