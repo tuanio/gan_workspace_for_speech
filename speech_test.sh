@@ -58,7 +58,7 @@ python test.py \
 
 python test.py \
     --dataroot /home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy \
-    --name vit_unet_with_pretrain_raw_feat_5h_5h_150epochs \
+    --name vit_unet_pretrain_raw_feat_5h_5h_150epochs \
     --model vit_unet \
     --dataset_mode audio \
     --norm instance \

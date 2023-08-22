@@ -13,6 +13,8 @@ class UnetGANModel(BaseModel):
             parser.add_argument('--lambda_A', type=float, default=10.0, help='weight for cycle loss (A -> B -> A)')
             parser.add_argument('--lambda_B', type=float, default=10.0, help='weight for cycle loss (B -> A -> B)')
             parser.add_argument('--lambda_identity', type=float, default=0.5, help='use identity mapping. Setting lambda_identity other than 0 has an effect of scaling the weight of the identity mapping loss. For example, if the weight of the identity loss should be 10 times smaller than the weight of the reconstruction loss, please set lambda_identity = 0.1')
+            parser.add_argument('--constant-gp', type=float, default=100, help='constant of gradient')
+            parser.add_argument('--lambda-gp', type=float, default=0.1, help='gradient penalty')
 
         return parser
 
@@ -72,9 +74,9 @@ class UnetGANModel(BaseModel):
             self.criterionCycle = torch.nn.L1Loss()
             self.criterionIdt = torch.nn.L1Loss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
-            self.optimizer_G = torch.optim.Adam(itertools.chain(self.netG_A.parameters(), self.netG_B.parameters()), lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G = torch.optim.Adam(itertools.chain(self.netG_A.parameters(), self.netG_B.parameters()), lr=opt.lr_G, betas=(opt.beta1, 0.999))
             disc_parameters = itertools.chain(self.netD_A.parameters(), self.netD_B.parameters(), self.netD2_A.parameters(), self.netD2_B.parameters()) if opt.use_cycled_discriminators else itertools.chain(self.netD_A.parameters(), self.netD_B.parameters())
-            self.optimizer_D = torch.optim.Adam(disc_parameters, lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_D = torch.optim.Adam(disc_parameters, lr=opt.lr_D, betas=(opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
 
@@ -123,7 +125,10 @@ class UnetGANModel(BaseModel):
         pred_fake = netD(fake.detach())
         loss_D_fake = self.criterionGAN(pred_fake, False)
         # Combined loss and calculate gradients
-        loss_D = (loss_D_real + loss_D_fake) * 0.5
+        loss_D = (loss_D_real + loss_D_fake) * 0.5 + networks.cal_gradient_penalty(netD, real_data=real,
+                                                            fake_data=fake.detach(), device=self.device,
+                                                            constant=self.opt.constant_gp,
+                                                            lambda_gp=self.opt.lambda_gp)
         loss_D.backward()
         return loss_D
 
@@ -192,22 +197,26 @@ class UnetGANModel(BaseModel):
         self.loss_G = self.loss_G_A + self.loss_G_B + self.loss_cycle_A + self.loss_cycle_B + self.loss_idt_A + self.loss_idt_B + self.loss_G2_A + self.loss_G2_B
         self.loss_G.backward()
 
-    def optimize_parameters(self):
+    def optimize_parameters(self, step):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         # forward
         self.forward()      # compute fake images and reconstruction images.
         # G_A and G_B
-        self.set_requires_grad([self.netD_A, self.netD_B], False)  # Ds require no gradients when optimizing Gs
-        self.optimizer_G.zero_grad()  # set G_A and G_B's gradients to zero
-        self.backward_G()             # calculate gradients for G_A and G_B
-        self.optimizer_G.step()       # update G_A and G_B's weights
-        # D_A and D_B
-        self.set_requires_grad([self.netD_A, self.netD_B], True)
-        self.optimizer_D.zero_grad()   # set D_A and D_B's gradients to zero
-        self.backward_D_A()      # calculate gradients for D_A
-        self.backward_D_B()      # calculate graidents for D_B
-        if self.opt.use_cycled_discriminators:
-            self.backward_D2_A()      # calculate gradients for D2_A
-            self.backward_D2_B()      # calculate graidents for D2_B
-        self.optimizer_D.step()  # update D_A and D_B's weights
+
+        if self.opt.G_update_frequency % step == 0:
+            self.set_requires_grad([self.netD_A, self.netD_B], False)  # Ds require no gradients when optimizing Gs
+            self.optimizer_G.zero_grad()  # set G_A and G_B's gradients to zero
+            self.backward_G()             # calculate gradients for G_A and G_B
+            self.optimizer_G.step()       # update G_A and G_B's weights
+        
+        if self.opt.D_update_frequency % step == 0:
+            # D_A and D_B
+            self.set_requires_grad([self.netD_A, self.netD_B], True)
+            self.optimizer_D.zero_grad()   # set D_A and D_B's gradients to zero
+            self.backward_D_A()      # calculate gradients for D_A
+            self.backward_D_B()      # calculate graidents for D_B
+            if self.opt.use_cycled_discriminators:
+                self.backward_D2_A()      # calculate gradients for D2_A
+                self.backward_D2_B()      # calculate graidents for D2_B
+            self.optimizer_D.step()  # update D_A and D_B's weights
 

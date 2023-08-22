@@ -49,7 +49,7 @@ class PretrainGeneratorModel(BaseModel):
         self.loss_l1 = self.criterion(self.reconstruct, self.data)
         self.loss_l1.backward()
 
-    def optimize_parameters(self):
+    def optimize_parameters(self, step):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         # forward
         self.forward()      # compute fake images and reconstruction images.

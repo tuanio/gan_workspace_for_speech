@@ -39,6 +39,7 @@ if __name__ == '__main__':
     if opt.use_wandb:
         wandb.init(project=opt.wandb_project, name=opt.wandb_run_name)
 
+    step = 0
     for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):    # outer loop for different epochs; we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>
         epoch_start_time = time.time()  # timer for entire epoch
         iter_data_time = time.time()    # timer for data loading per iteration
@@ -52,7 +53,7 @@ if __name__ == '__main__':
             total_iters += opt.batch_size
             epoch_iter += opt.batch_size
             model.set_input(data)         # unpack data from dataset and apply preprocessing
-            model.optimize_parameters()   # calculate loss functions, get gradients, update network weights
+            model.optimize_parameters(step)   # calculate loss functions, get gradients, update network weights
 
             if total_iters % opt.display_freq == 0:   # display images on visdom and save images to a HTML file
                 save_result = total_iters % opt.update_html_freq == 0
@@ -70,6 +71,8 @@ if __name__ == '__main__':
                 print('saving the latest model (epoch %d, total_iters %d)' % (epoch, total_iters))
                 save_suffix = 'iter_%d' % total_iters if opt.save_by_iter else 'latest'
                 model.save_networks(save_suffix)
+            
+            step += 1
 
             iter_data_time = time.time()
         if epoch % opt.save_epoch_freq == 0:              # cache our model every <save_epoch_freq> epochs
