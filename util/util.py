@@ -120,7 +120,7 @@ def mkdir(path):
 
 STANDARD_LUFS = -23.0
 
-def extract(filename, sr=None, energy = 1.0, hop_length = 64, state = None):
+def extract(filename, n_fft=128, hop_length=64, sr=None, energy = 1.0, hop_length = 64, state = None):
     """
         Extracts spectrogram from an input audio file
         Arguments:
@@ -136,7 +136,7 @@ def extract(filename, sr=None, energy = 1.0, hop_length = 64, state = None):
     # data = pyln.normalize.loudness(data, loudness, target_loudness = STANDARD_LUFS)
     ##################################################
 
-    comp_spec = librosa.stft(data, n_fft=defaults["n_fft"], hop_length = hop_length, window='hamming')
+    comp_spec = librosa.stft(data, sr=None, n_fft=n_fft, hop_length = hop_length, window='hamming')
 
     mag_spec, phase = librosa.magphase(comp_spec)
 
