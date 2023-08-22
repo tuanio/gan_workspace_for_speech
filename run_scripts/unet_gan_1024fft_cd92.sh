@@ -47,6 +47,27 @@ python train.py \
     --wandb-project GAN_for_CD92 \
     --wandb-run-name unet_gan_${config}
 
+# 
+# python test.py \
+#     --dataroot /home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy \
+#     --name unet_gan_raw_feat_1024fft_lrG0.0002_lr_D0.0001_updateD_slower_5times_GP_5h_5h_100epochs \
+#     --model unet_gan \
+#     --dataset_mode audio \
+#     --norm instance \
+#     --phase test \
+#     --no_dropout \
+#     --n_fft 1024 \
+#     --hop_length 32 \
+#     --fix_w 513 \
+#     --load_size_h 513 \
+#     --load_size_w 513 \
+#     --crop_size 513 \
+#     --batch_size 1 \
+#     --gpu_ids 3 \
+#     --input_nc 1 \
+#     --output_nc 1 \
+#     --use_mask
+
 # python train.py \
 #     --dataroot $data_cache \
 #     --name unet_gan_${config} \
