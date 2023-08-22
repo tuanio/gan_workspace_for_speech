@@ -120,7 +120,7 @@ def mkdir(path):
 
 STANDARD_LUFS = -23.0
 
-def extract(filename, n_fft=128, hop_length=64, sr=None, energy = 1.0, hop_length = 64, state = None):
+def extract(filename, n_fft=128, hop_length=64, sr=None, energy = 1.0, state = None):
     """
         Extracts spectrogram from an input audio file
         Arguments:

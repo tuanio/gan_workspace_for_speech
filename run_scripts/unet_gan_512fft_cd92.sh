@@ -1,5 +1,5 @@
-data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
-# data_cache=/home/stud_vantuan/share_with_150/cache/cd_data_5h_clean_2.5h_noisy
+# data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
+data_cache=/home/stud_vantuan/share_with_150/cache/cd_data_5h_clean_2.5h_noisy
 checkpoints_dir=checkpoints/
 gpu_ids=1
 config=raw_feat_512fft_lrG0.0002_lr_D0.0001_updateD_slower_5times_GP_5h_5h_100epochs
