@@ -119,7 +119,7 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
     return net
 
 
-def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[], use_mask = False, raw_feat=True):
+def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[], use_mask = False, raw_feat=True, data_shape=(128, 128)):
     """Create a generator
 
     Parameters:
@@ -159,7 +159,9 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
     elif netG == 'unet_256':
         net = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     elif netG == 'unet_128_mask':
-        net = MaskUnetGenerator(input_nc + 1, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
+        net = MaskUnetGenerator(input_nc + 1, output_nc, 7, ngf,
+                                norm_layer=norm_layer,use_dropout=use_dropout,
+                                data_shape=data_shape)
     elif netG == 'vit_unet_mask':
         cfg = {
             'in_c'               : input_nc + 1,
@@ -823,7 +825,7 @@ class ResnetBlock(nn.Module):
 class MaskUnetGenerator(nn.Module):
     """Create a Unet-based generator"""
 
-    def __init__(self, input_nc, output_nc, num_downs, ngf=64, norm_layer=nn.BatchNorm2d, use_dropout=False):
+    def __init__(self, input_nc, output_nc, num_downs, ngf=64, norm_layer=nn.BatchNorm2d, use_dropout=False, data_shape=(128, 128)):
         """Construct a Unet generator
         Parameters:
             input_nc (int)  -- the number of channels in input images
@@ -837,6 +839,12 @@ class MaskUnetGenerator(nn.Module):
         It is a recursive process.
         """
         super(MaskUnetGenerator, self).__init__()
+        sh = [4, 5]
+        outer_ker_sz_h = sh[data_shape[0] % 2]
+        outer_ker_sz_w = sh[data_shape[0] % 2] 
+        # (129, 128) -> (5, 4)
+        # (257, 257) -> (5, 5)
+
         # construct unet structure
         unet_block = UnetSkipConnectionBlock(ngf * 8, ngf * 8, input_nc=None, submodule=None, norm_layer=norm_layer, innermost=True)  # add the innermost layer
         for i in range(num_downs - 5):          # add intermediate layers with ngf * 8 filters
@@ -845,8 +853,10 @@ class MaskUnetGenerator(nn.Module):
         unet_block = UnetSkipConnectionBlock(ngf * 4, ngf * 8, input_nc=None, submodule=unet_block, norm_layer=norm_layer)
         unet_block = UnetSkipConnectionBlock(ngf * 2, ngf * 4, input_nc=None, submodule=unet_block, norm_layer=norm_layer)
         unet_block = UnetSkipConnectionBlock(ngf, ngf * 2, input_nc=None, submodule=unet_block, norm_layer=norm_layer)
-        self.model = UnetSkipConnectionBlock(output_nc, ngf, input_nc=input_nc, submodule=unet_block, outermost=True,
-                                                norm_layer=norm_layer, raw_feat=True, outermost_kernelsize=(5, 4))  # add the outermost layer
+        self.model = UnetSkipConnectionBlock(output_nc, ngf, input_nc=input_nc,
+                                                submodule=unet_block, outermost=True,
+                                                norm_layer=norm_layer, raw_feat=True,
+                                                outermost_kernelsize=(outer_ker_sz_h, outer_ker_sz_w))  # add the outermost layer
 
     def forward(self, input, mask):
         """Standard forward"""

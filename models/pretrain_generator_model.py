@@ -13,7 +13,7 @@ class PretrainGeneratorModel(BaseModel):
         parser.add_argument('--model_name', type=str, default='vit_unet_mask')
         return parser
 
-    def __init__(self, opt):
+    def __init__(self, opt, data_shape=(128, 128)):
         BaseModel.__init__(self, opt)
         if self.isTrain:
             self.loss_names = ['l1']
@@ -23,7 +23,8 @@ class PretrainGeneratorModel(BaseModel):
         self.opt = opt
 
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.model_name, opt.norm,
-                                        not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids, use_mask = opt.use_mask, raw_feat=opt.raw_feat)
+                                        not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids, use_mask = opt.use_mask,
+                                        raw_feat=opt.raw_feat, data_shape=data_shape)
 
         if self.isTrain:
             self.criterion = torch.nn.L1Loss()

@@ -20,7 +20,7 @@ class ViTUnetModel(BaseModel):
 
         return parser
 
-    def __init__(self, opt):
+    def __init__(self, opt, data_shape=(128, 128)):
         BaseModel.__init__(self, opt)
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
         if self.isTrain:
@@ -48,9 +48,11 @@ class ViTUnetModel(BaseModel):
         # The naming is different from those used in the paper.
         # Code (vs. paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
         self.netG_A = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, 'vit_unet_mask', opt.norm,
-                                        not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids, use_mask = opt.use_mask, raw_feat=opt.raw_feat)
+                                        not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids, use_mask = opt.use_mask,
+                                        raw_feat=opt.raw_feat, data_shape=data_shape)
         self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, 'vit_unet_mask', opt.norm,
-                                        not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids, use_mask = opt.use_mask, raw_feat=opt.raw_feat)
+                                        not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids, use_mask = opt.use_mask,
+                                        raw_feat=opt.raw_feat, data_shape=data_shape)
 
         if self.opt.gen_pretrained_path is not None:
             print(f"Loading pretrained of Generator from [{self.opt.gen_pretrained_path}]")

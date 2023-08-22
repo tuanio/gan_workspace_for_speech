@@ -17,6 +17,7 @@ python train.py \
     --lambda_identity 0.5 \
     --n_fft 512 \
     --hop_length 32 \
+    --fix_w 257 \
     --load_size_h 257 \
     --load_size_w 257 \
     --crop_size 257 \
