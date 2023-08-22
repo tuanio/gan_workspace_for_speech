@@ -127,7 +127,7 @@ def extract(filename, n_fft=128, hop_length=64, sr=None, energy = 1.0, state = N
             filename: path of the audio file
             n_fft: length of the windowed signal after padding with zeros.
     """
-    data, sr = librosa.load(filename, sr=sr)
+    data, sr = librosa.load(filename, sr=None)
     data *= energy
 
     ##Normalizing to standard -23.0 LuFS
@@ -136,7 +136,7 @@ def extract(filename, n_fft=128, hop_length=64, sr=None, energy = 1.0, state = N
     # data = pyln.normalize.loudness(data, loudness, target_loudness = STANDARD_LUFS)
     ##################################################
 
-    comp_spec = librosa.stft(data, sr=None, n_fft=n_fft, hop_length = hop_length, window='hamming')
+    comp_spec = librosa.stft(data, n_fft=n_fft, hop_length = hop_length, window='hamming')
 
     mag_spec, phase = librosa.magphase(comp_spec)
 
