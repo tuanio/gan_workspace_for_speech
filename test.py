@@ -157,7 +157,7 @@ def save_audio_raw(opt, visuals_list, img_path, use_phase=False, label='fakeA'):
             else:
                 mag_spec = np.concatenate((mag_spec, im), axis=-1) #concatenating specs to obtain original.
     
-    data, sr = getTimeSeriesRaw(mag_spec, phase_spec, img_path, opt.spec_power, opt.energy, state = opt.phase, use_phase=use_phase)
+    data, sr = getTimeSeriesRaw(mag_spec, phase_spec, img_path, opt.spec_power, opt.energy, state = opt.phase, use_phase=use_phase, n_fft=opt.n_fft, fix_w=opt.fix_w, hop_length=opt.hop_length)
     # plt.matshow(mag_spec)
     # plt.savefig(save_path)
     print('Output')

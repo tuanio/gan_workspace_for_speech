@@ -120,7 +120,7 @@ def mkdir(path):
 
 STANDARD_LUFS = -23.0
 
-def extract(filename, n_fft=128, hop_length=64, sr=None, energy = 1.0, state = None):
+def extract(filename, n_fft=128, hop_length=64, energy = 1.0, state = None):
     """
         Extracts spectrogram from an input audio file
         Arguments:
@@ -198,7 +198,7 @@ def getTimeSeries(im_mag, im_phase, img_path, pow, energy = 1.0, state = None, u
 
     return reconstruct(res_mag, im_phase)/energy if use_phase else reconstruct(res_mag, phase)/energy, sr
 
-def getTimeSeriesRaw(im_mag, im_phase, img_path, pow, energy = 1.0, state = None, use_phase=False):
+def getTimeSeriesRaw(im_mag, im_phase, img_path, pow, energy = 1.0, state = None, n_fft=256, fix_w=128, hop_length=64, use_phase=False):
 
     """
     Modified by Leander Maben.
@@ -207,12 +207,11 @@ def getTimeSeriesRaw(im_mag, im_phase, img_path, pow, energy = 1.0, state = None
     im_mag = np.squeeze(im_mag)
     im_phase = np.squeeze(im_phase)
 
-    mag_spec, phase, sr = extract(img_path[0], defaults["sampling_rate"], energy, state = state)
+    mag_spec, phase, sr = extract(img_path[0], n_fft=n_fft, hop_length=hop_length, energy=energy, state = state)
 
     h, w = mag_spec.shape
     print(f'Initial: {im_mag.shape}')
     ######Ignoring padding
-    fix_w = defaults["fix_w"]
     mod_fix_w = w % fix_w
     extra_cols = 0
     if(mod_fix_w != 0):

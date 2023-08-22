@@ -841,7 +841,7 @@ class MaskUnetGenerator(nn.Module):
         super(MaskUnetGenerator, self).__init__()
         sh = [4, 5]
         outer_ker_sz_h = sh[data_shape[0] % 2]
-        outer_ker_sz_w = sh[data_shape[1] % 2] 
+        outer_ker_sz_w = sh[data_shape[1] % 2]
         # (129, 128) -> (5, 4)
         # (257, 257) -> (5, 5)
 
