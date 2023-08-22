@@ -1,7 +1,7 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
 checkpoints_dir=checkpoints/
 gpu_ids=3
-config=raw_feat_lrG0.0003_lr_D0.0001_updateD_slower_5times_GP_5h_5h_100epochs
+config=raw_feat_lrG0.0002_lr_D0.0001_updateD_slower_5times_GP_5h_5h_100epochs
 
 python train.py \
     --dataroot $data_cache \
