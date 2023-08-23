@@ -31,7 +31,8 @@ with open('defaults.json','r') as f:
     defaults = json.load(f)
 
 
-def split_and_save(mag_spec, phase_spec, fix_w=128, pow=1.0, state = "Train", channels = 1, use_phase=False):
+def split_and_save(mag_spec, phase_spec, fix_w=128, pow=1.0, state = "Train", channels = 1,
+                use_phase=False, is_clean=True, threshold_to_cut=0, minimum_start_end=10000):
     """
         Info: Takes a spectrogram, splits it into equal parts; uses median padding to achieve this.
         Parameters:
@@ -43,7 +44,22 @@ def split_and_save(mag_spec, phase_spec, fix_w=128, pow=1.0, state = "Train", ch
 
         Modified by: Leander Maben
     """
-
+    
+    if not is_clean: # noisy domain
+        summed = mag_spec.sum(axis=0) # sum by frequencies
+        for i in range(mag_spec.shape[1] - 1):
+            if summed[i] >= minimum_start_end:
+                break
+            if summed[i + 1] - summed[i] >= threshold_to_cut:
+                mag_spec = mag_spec[:, i + 1:]
+                break
+        
+        for i in range(mag_spec.shape[1] - 1, 0, -1):
+            if summed[i] >= minimum_start_end:
+                break
+            if summed[i] - summed[i - 1] >= threshold_to_cut:
+                mag_spec = mag_spec[:, i - 1:]
+                break
 
     fix_w = fix_w  # because we have 129 n_fft bins; this will result in 129x128 spec components
     orig_shape = mag_spec.shape # mag_spec and phase_spec have same dimensions
@@ -109,10 +125,12 @@ def split_and_save(mag_spec, phase_spec, fix_w=128, pow=1.0, state = "Train", ch
 
 #     return components
 
-def processInput(filepath, power, state, channels, use_phase, n_fft=256, hop_length=64, fix_w=128):
+def processInput(filepath, power, state, channels, use_phase, n_fft=256, hop_length=64,
+                    fix_w=128, is_clean=False, threshold_to_cut=0, minimum_start_end=10000):
     mag_spec, phase, sr = util.extract(filename=filepath, n_fft=n_fft, hop_length=hop_length, energy=1.0, state=state)
-    components = split_and_save(mag_spec, phase, fix_w=fix_w, pow=power, state = state, channels = channels, use_phase=use_phase)
-
+    components = split_and_save(mag_spec, phase, fix_w=fix_w, pow=power, state = state,
+                                channels = channels, use_phase=use_phase, is_clean=is_clean,
+                                threshold_to_cut=threshold_to_cut, minimum_start_end=minimum_start_end)
     return components
 
 
@@ -185,10 +203,12 @@ class AudioDataset(BaseDataset):
         params = dict(
             n_fft=opt.n_fft,
             hop_length=opt.hop_length,
-            fix_w=opt.fix_w
+            fix_w=opt.fix_w,
+            threshold_to_cut=opt.threshold_to_cut,
+            minimum_start_end=opt.minimum_start_end,
         )
 
-        partial_process_input = partial(processInput, **params)
+        partial_process_input = partial(processInput, is_clean=True, **params)
 
         #Compute the spectrogram components parallelly to make it more efficient; uses Joblib, maintains order of input data passed.
         self.clean_specs = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(partial_process_input)(i, self.spec_power, self.phase, self.channels, self.opt.use_phase) for i in self.A_paths)
@@ -211,7 +231,10 @@ class AudioDataset(BaseDataset):
 
         del self.no_comps_clean
         if not self.opt.single_direction:
-            self.noisy_specs = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(partial_process_input)(i, self.spec_power, self.phase, self.channels, self.opt.use_phase) for i in self.B_paths)
+            
+            partial_process_input_noisy = partial(processInput, is_clean=False, **params)
+
+            self.noisy_specs = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(partial_process_input_noisy)(i, self.spec_power, self.phase, self.channels, self.opt.use_phase) for i in self.B_paths)
             self.no_comps_noisy = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(countComps)(i) for i in self.noisy_specs)
 
             self.noisy_spec_paths = []

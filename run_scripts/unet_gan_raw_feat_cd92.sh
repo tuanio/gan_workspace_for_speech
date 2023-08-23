@@ -2,7 +2,7 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd_data_5h_clean_2.5h_noisy
 checkpoints_dir=checkpoints/
 gpu_ids=1
-config=raw_feat_lrG0.0002_lr_D0.0001_updateD_slower_3times_GP_5h_2.5h_100epochs
+config=cut30_thres100_raw_feat_lrG0.0002_lr_D0.0001_updateD_slower_5times_GP_5h_2.5h_100epochs
 
 python train.py \
     --dataroot $data_cache \
@@ -19,14 +19,16 @@ python train.py \
     --load_size_w 128 \
     --crop_size 128 \
     --preprocess none \
-    --batch_size 8 \
+    --batch_size 16 \
+    --threshold-to-cut 30 \
+    --minimum-start-end 100 \
     --lr_G 0.0002 \
     --lr_D 0.0001 \
-    --D-update-frequency 3 \
+    --D-update-frequency 5 \
     --constant-gp 100 \
     --lambda-gp 0.1 \
-    --niter 50 \
-    --niter_decay 50 \
+    --niter 70 \
+    --niter_decay 30 \
     --gpu_ids $gpu_ids \
     --display_id 0 \
     --display_freq 200 \
@@ -43,6 +45,24 @@ python train.py \
     --use-wandb \
     --wandb-project GAN_for_CD92 \
     --wandb-run-name unet_gan_${config}
+
+# 
+# python test.py \
+#     --dataroot /home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy \
+#     --name unet_gan_raw_feat_lrG0.0002_lr_D0.0001_updateD_slower_5times_GP_5h_5h_100epochs \
+#     --model unet_gan \
+#     --dataset_mode audio \
+#     --norm instance \
+#     --phase test \
+#     --load_size_h 129 \
+#     --load_size_w 128 \
+#     --crop_size 128 \
+#     --no_dropout \
+#     --batch_size 1 \
+#     --gpu_ids 0 \
+#     --input_nc 1 \
+#     --output_nc 1 \
+#     --use_mask
 
 # python train.py \
 #     --dataroot $data_cache \

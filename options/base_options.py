@@ -28,6 +28,13 @@ class BaseOptions():
         parser.add_argument('--n_fft', type=int, default=256)
         parser.add_argument('--hop_length', type=int, default=64) # should be win length / 8, but 64 is the default
         parser.add_argument('--fix_w', type=int, default=128) 
+        # call W is the sum by frequencies of Magnitude Spectrogram
+        # if W[i + 1] - w[i] < threshold_to_cut or run backward (from end to start)
+        # will cut at that
+        # also minimum start end to prevent non noisy
+        # only apply to noisy
+        parser.add_argument('--threshold-to-cut', type=int, default=30) 
+        parser.add_argument('--minimum-start-end', type=int, default=100) 
         # model parameters
         parser.add_argument('--model', type=str, default='cycle_gan', help='chooses which model to use. [cycle_gan | pix2pix | test | colorization]')
         parser.add_argument('--input_nc', type=int, default=3, help='# of input image channels: 3 for RGB and 1 for grayscale')
