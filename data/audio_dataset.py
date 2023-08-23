@@ -32,7 +32,8 @@ with open('defaults.json','r') as f:
 
 
 def split_and_save(mag_spec, phase_spec, fix_w=128, pow=1.0, state = "Train", channels = 1,
-                use_phase=False, is_clean=True, threshold_to_cut=0, minimum_start_end=10000):
+                use_phase=False, is_clean=True, threshold_to_cut=0, minimum_start_end=10000,
+                cut_clean=False, cut_noisy=False):
     """
         Info: Takes a spectrogram, splits it into equal parts; uses median padding to achieve this.
         Parameters:
@@ -45,7 +46,23 @@ def split_and_save(mag_spec, phase_spec, fix_w=128, pow=1.0, state = "Train", ch
         Modified by: Leander Maben
     """
     
-    if not is_clean: # noisy domain
+    if not is_clean and cut_noisy: # noisy domain
+        summed = mag_spec.sum(axis=0) # sum by frequencies
+        for i in range(mag_spec.shape[1] - 1):
+            if summed[i] >= minimum_start_end:
+                break
+            if summed[i + 1] - summed[i] >= threshold_to_cut:
+                mag_spec = mag_spec[:, i + 1:]
+                break
+        
+        for i in range(mag_spec.shape[1] - 1, 0, -1):
+            if summed[i] >= minimum_start_end:
+                break
+            if summed[i] - summed[i - 1] >= threshold_to_cut:
+                mag_spec = mag_spec[:, i - 1:]
+                break
+    
+    if is_clean and cut_clean: # noisy domain
         summed = mag_spec.sum(axis=0) # sum by frequencies
         for i in range(mag_spec.shape[1] - 1):
             if summed[i] >= minimum_start_end:
@@ -126,11 +143,13 @@ def split_and_save(mag_spec, phase_spec, fix_w=128, pow=1.0, state = "Train", ch
 #     return components
 
 def processInput(filepath, power, state, channels, use_phase, n_fft=256, hop_length=64,
-                    fix_w=128, is_clean=False, threshold_to_cut=0, minimum_start_end=10000):
+                    fix_w=128, is_clean=False, threshold_to_cut=0, minimum_start_end=10000,
+                    cut_clean=False, cut_noisy=False):
     mag_spec, phase, sr = util.extract(filename=filepath, n_fft=n_fft, hop_length=hop_length, energy=1.0, state=state)
     components = split_and_save(mag_spec, phase, fix_w=fix_w, pow=power, state = state,
                                 channels = channels, use_phase=use_phase, is_clean=is_clean,
-                                threshold_to_cut=threshold_to_cut, minimum_start_end=minimum_start_end)
+                                threshold_to_cut=threshold_to_cut, minimum_start_end=minimum_start_end,
+                                cut_clean=cut_clean, cut_noisy=cut_noisy)
     return components
 
 
@@ -206,6 +225,8 @@ class AudioDataset(BaseDataset):
             fix_w=opt.fix_w,
             threshold_to_cut=opt.threshold_to_cut,
             minimum_start_end=opt.minimum_start_end,
+            cut_clean=opt.cut_clean,
+            cut_noisy=opt.cut_noisy,
         )
 
         partial_process_input = partial(processInput, is_clean=True, **params)

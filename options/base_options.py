@@ -35,6 +35,8 @@ class BaseOptions():
         # only apply to noisy
         parser.add_argument('--threshold-to-cut', type=int, default=30) 
         parser.add_argument('--minimum-start-end', type=int, default=100) 
+        parser.add_argument('--cut-clean', action='store_true', help='Apply cut to clean')
+        parser.add_argument('--cut-noisy', action='store_true', help='Apply cut to noisy')
         # model parameters
         parser.add_argument('--model', type=str, default='cycle_gan', help='chooses which model to use. [cycle_gan | pix2pix | test | colorization]')
         parser.add_argument('--input_nc', type=int, default=3, help='# of input image channels: 3 for RGB and 1 for grayscale')
