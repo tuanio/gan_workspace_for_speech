@@ -1,8 +1,8 @@
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
 data_cache=/home/stud_vantuan/share_with_150/cache/cd_data_5h_clean_2.5h_noisy
 checkpoints_dir=checkpoints/
-gpu_ids=2
-config=cut30_thres100_cut_both_raw_feat_lrG0.0002_lr_D0.0001_updateD_slower_2times_GP_5h_2.5h_100epochs
+gpu_ids=3
+config=cut30_thres100_cut_noisy_feat_lrG0.0002_lr_D0.0002_updateD_faster_2times_GP_5h_2.5h_100epochs
 
 python train.py \
     --dataroot $data_cache \
@@ -25,8 +25,9 @@ python train.py \
     --cut-clean \
     --cut-noisy \
     --lr_G 0.0002 \
-    --lr_D 0.0001 \
-    --D-update-frequency 2 \
+    --lr_D 0.0002 \
+    --G-update-frequency 2 \
+    --D-update-frequency 1 \
     --constant-gp 100 \
     --lambda-gp 0.1 \
     --niter 70 \
