@@ -2,7 +2,7 @@ data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd_data_5h_clean_2.5h_noisy
 checkpoints_dir=checkpoints/
 gpu_ids=0
-config=cycle50_idt5_sn_gp2_lr0.0002_512fft_5h_5h_200epochs
+config=cut_noisy_cycle50_idt5_sn_gp2_lr0.0002_512fft_5h_5h_200epochs
 
 python train.py \
     --dataroot $data_cache \
@@ -22,7 +22,8 @@ python train.py \
     --load_size_w 257 \
     --crop_size 257 \
     --preprocess none \
-    --batch_size 4 \
+    --batch_size 8 \
+    --cut-noisy \
     --lr_G 0.0002 \
     --lr_D 0.0002 \
     --D-update-frequency 1 \
