@@ -55,7 +55,7 @@ python train.py \
 #
 python test.py \
     --dataroot /home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy \
-    --name unet_gan_cycle50_idt5_sn_gp2_lr0.0002_512fft_5h_5h_200epochs \
+    --name unet_gan_cut_noisy_cycle50_idt5_sn_gp2_lr0.0002_512fft_5h_5h_200epochs \
     --model unet_gan \
     --dataset_mode audio \
     --norm instance \
@@ -68,7 +68,7 @@ python test.py \
     --load_size_w 257 \
     --crop_size 257 \
     --batch_size 1 \
-    --gpu_ids 0 \
+    --gpu_ids 1 \
     --input_nc 1 \
     --output_nc 1 \
     --raw-feat \

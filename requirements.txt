@@ -5,3 +5,4 @@ visdom>=0.1.8.3
 pyloudnorm
 librosa
 pydub
+kmeans-pytorch
