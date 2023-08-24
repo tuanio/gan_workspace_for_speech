@@ -78,6 +78,8 @@ class BaseOptions():
         parser.add_argument('--saveDisk', action='store_true', help='save disk memory during testing time')
         parser.add_argument('--single_direction', action='store_true', help='Only clean data is present.Use only for test.')
     
+        parser.add_argument('--apply_spectral_norm', action='store_true', help='Whether to apply SN.')
+
         self.initialized = True
         return parser
 

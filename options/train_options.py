@@ -46,7 +46,5 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--G-update-frequency', type=int, default=1)
         parser.add_argument('--D-update-frequency', type=int, default=5)
 
-        parser.add_argument('--apply_spectral_norm', action='store_true', help='Whether to apply SN.')
-
         self.isTrain = True
         return parser
