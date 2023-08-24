@@ -23,6 +23,8 @@ python train.py \
     --crop_size 257 \
     --preprocess none \
     --batch_size 8 \
+    --threshold-to-cut 30 \
+    --minimum-start-end 100 \
     --cut-noisy \
     --lr_G 0.0002 \
     --lr_D 0.0002 \
