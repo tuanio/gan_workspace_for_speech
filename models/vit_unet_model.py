@@ -49,10 +49,12 @@ class ViTUnetModel(BaseModel):
         # Code (vs. paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
         self.netG_A = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, 'vit_unet_mask', opt.norm,
                                         not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids, use_mask = opt.use_mask,
-                                        raw_feat=opt.raw_feat, data_shape=data_shape)
+                                        raw_feat=opt.raw_feat, data_shape=data_shape,
+                                        spectral_norm=opt.apply_spectral_norm)
         self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, 'vit_unet_mask', opt.norm,
                                         not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids, use_mask = opt.use_mask,
-                                        raw_feat=opt.raw_feat, data_shape=data_shape)
+                                        raw_feat=opt.raw_feat, data_shape=data_shape,
+                                        spectral_norm=opt.apply_spectral_norm)
 
         if self.opt.gen_pretrained_path is not None:
             print(f"Loading pretrained of Generator from [{self.opt.gen_pretrained_path}]")
@@ -68,14 +70,18 @@ class ViTUnetModel(BaseModel):
 
         if self.isTrain:  # define discriminators
             self.netD_A = networks.define_D(opt.output_nc, opt.ndf, opt.netD,
-                                            opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)
-            self.netD_B = networks.define_D(opt.input_nc, opt.ndf, opt.netD,
-                                            opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)
+                                            opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids,
+                                            spectral_norm=opt.apply_spectral_norm)
+            self.netD_B = networks.define_D(opt.output_nc, opt.ndf, opt.netD,
+                                            opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids,
+                                            spectral_norm=opt.apply_spectral_norm)
             if opt.use_cycled_discriminators:
-                self.netD2_A = networks.define_D(opt.input_nc, opt.ndf, opt.netD,
-                                                opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)
-                self.netD2_B = networks.define_D(opt.input_nc, opt.ndf, opt.netD,
-                                                opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)
+                self.netD2_A = networks.define_D(opt.output_nc, opt.ndf, opt.netD,
+                                            opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids,
+                                            spectral_norm=opt.apply_spectral_norm)
+                self.netD2_B = networks.define_D(opt.output_nc, opt.ndf, opt.netD,
+                                            opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids,
+                                            spectral_norm=opt.apply_spectral_norm)
 
         if self.isTrain:
             if opt.lambda_identity > 0.0:  # only works when input and output images have the same number of channels

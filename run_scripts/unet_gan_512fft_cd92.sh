@@ -1,7 +1,7 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd_data_5h_clean_2.5h_noisy
 checkpoints_dir=checkpoints/
-gpu_ids=1
+gpu_ids=0
 config=raw_feat_512fft_lrG0.0002_lr_D0.0001_updateD_slower_5times_GP_5h_5h_100epochs
 
 python train.py \
@@ -9,27 +9,29 @@ python train.py \
     --name unet_gan_${config} \
     --model unet_gan \
     --dataset_mode audio \
-    --pool_size 50 \
+    --pool_size 100 \
     --no_dropout \
     --norm instance \
-    --lambda_A 10 \
-    --lambda_B 10 \
-    --lambda_identity 0.5 \
+    --lambda_A 50 \
+    --lambda_B 50 \
+    --lambda_identity 5 \
     --n_fft 512 \
-    --hop_length 32 \
+    --hop_length 64 \
     --fix_w 257 \
     --load_size_h 257 \
     --load_size_w 257 \
     --crop_size 257 \
     --preprocess none \
-    --batch_size 8 \
+    --batch_size 4 \
     --lr_G 0.0002 \
-    --lr_D 0.0001 \
-    --D-update-frequency 5 \
-    --constant-gp 100 \
-    --lambda-gp 0.1 \
-    --niter 50 \
-    --niter_decay 50 \
+    --lr_D 0.0002 \
+    --D-update-frequency 1 \
+    --D-update-frequency 1 \
+    --constant-gp 1 \
+    --apply_spectral_norm \
+    --lambda-gp 2 \
+    --niter 200 \
+    --niter_decay 200 \
     --gpu_ids $gpu_ids \
     --display_id 0 \
     --display_freq 200 \
@@ -42,7 +44,7 @@ python train.py \
     --max_mask_len 50 \
     --checkpoints_dir $checkpoints_dir \
     --no_html \
-    --num_threads 4 \
+    --num_threads 2 \
     --use-wandb \
     --wandb-project GAN_for_CD92 \
     --wandb-run-name unet_gan_${config}

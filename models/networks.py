@@ -4,6 +4,7 @@ from torch.nn import init
 import functools
 from torch.optim import lr_scheduler
 import torch.nn.functional as F
+from torch.nn.utils.parametrizations import spectral_norm
 from .networks_unet_vit import MaskViTUNetGenerator
 from .networks_unet_conformer import MaskConformerUNetGenerator
 
@@ -118,8 +119,66 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
     init_weights(net, init_type, init_gain=init_gain)
     return net
 
+def cal_gradient_penalty(netD, real_data, fake_data, device, type='mixed', constant=1.0, lambda_gp=10.0):
+    """Calculate the gradient penalty loss, used in WGAN-GP paper https://arxiv.org/abs/1704.00028
 
-def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[], use_mask = False, raw_feat=True, data_shape=(128, 128)):
+    Arguments:
+        netD (network)              -- discriminator network
+        real_data (tensor array)    -- real images
+        fake_data (tensor array)    -- generated images from the generator
+        device (str)                -- GPU / CPU: from torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')
+        type (str)                  -- if we mix real and fake data or not [real | fake | mixed].
+        constant (float)            -- the constant used in formula ( | |gradient||_2 - constant)^2
+        lambda_gp (float)           -- weight for this loss
+
+    Returns the gradient penalty loss
+    """
+    if lambda_gp > 0.0:
+        if type == 'real':   # either use real images, fake images, or a linear interpolation of two.
+            interpolatesv = real_data
+        elif type == 'fake':
+            interpolatesv = fake_data
+        elif type == 'mixed':
+            alpha = torch.rand(real_data.shape[0], 1, device=device)
+            alpha = alpha.expand(real_data.shape[0], real_data.nelement() // real_data.shape[0]).contiguous().view(*real_data.shape)
+            interpolatesv = alpha * real_data + ((1 - alpha) * fake_data)
+        else:
+            raise NotImplementedError('{} not implemented'.format(type))
+        interpolatesv.requires_grad_(True)
+        disc_interpolates = netD(interpolatesv)
+        gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolatesv,
+                                        grad_outputs=torch.ones(disc_interpolates.size()).to(device),
+                                        create_graph=True, retain_graph=True, only_inputs=True)
+        gradients = gradients[0].view(real_data.size(0), -1)  # flat the data
+        # gamma-center gradient penalty
+        gradient_penalty = (((gradients + 1e-16).norm(2, dim=1) - constant) ** 2 / constant ** 2).mean() * lambda_gp        # added eps
+        return gradient_penalty, gradients
+    else:
+        return 0.0, None
+
+def apply_sn_to_module(module, name, n_power_iterations=1):
+    if isinstance(module, torch.nn.utils.parametrize.ParametrizationList):
+        return
+
+    if not hasattr(module, name):
+        return
+
+    w = getattr(module, name)
+
+    if (w is None) or len(w.shape) < 2:
+        return
+
+    spectral_norm(module, name, n_power_iterations)
+
+
+def apply_sn(module, tensor_name="weight", n_power_iterations=1):
+    submodule_list = list(module.modules())
+
+    for m in submodule_list:
+        apply_sn_to_module(m, tensor_name, n_power_iterations)
+
+
+def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[], use_mask = False, raw_feat=True, data_shape=(128, 128), spectral_norm = False):
     """Create a generator
 
     Parameters:
@@ -206,6 +265,17 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
             'image_shape'        : (1, 129, 128)
         }
         net = MaskConformerUNetGenerator(**cfg)
+    elif netG == 'conformer_classifier':
+        cfg = {
+            'input_dim': 80,
+            'd_model': 144,
+            'num_layers': 10,
+            'num_attention_heads': 6,
+            'subsampling_factor': 2,
+            'feed_forward_expansion_factor': 4,
+            'conv_expansion_factor': 2,
+        }
+        net = BinaryConformer(**cfg)
     elif netG == 'our':
         if use_mask:
             net = ResnetGenerator_mask(input_nc+1, output_nc, ngf, raw_feat, n_blocks=9)
@@ -213,10 +283,15 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
             net = ResnetGenerator_our(input_nc, output_nc, ngf, n_blocks=9)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % netG)
-    return init_net(net, init_type, init_gain, gpu_ids)
+    net = init_net(net, init_type, init_gain, gpu_ids)
+    
+    if spectral_norm:
+        apply_sn(net)
+    
+    return net
 
 
-def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal', init_gain=0.02, gpu_ids=[]):
+def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal', init_gain=0.02, gpu_ids=[], spectral_norm=False):
     """Create a discriminator
 
     Parameters:
@@ -257,8 +332,12 @@ def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal'
         net = PixelDiscriminator(input_nc, ndf, norm_layer=norm_layer)
     else:
         raise NotImplementedError('Discriminator model name [%s] is not recognized' % netD)
-    return init_net(net, init_type, init_gain, gpu_ids)
+    net = init_net(net, init_type, init_gain, gpu_ids)
 
+    if spectral_norm:
+        apply_sn(net)
+    
+    return net
 
 ##############################################################################
 # Classes
@@ -330,45 +409,6 @@ class GANLoss(nn.Module):
             else:
                 loss = prediction.mean()
         return loss
-
-
-def cal_gradient_penalty(netD, real_data, fake_data, device, type='mixed', constant=1.0, lambda_gp=10.0):
-    """Calculate the gradient penalty loss, used in WGAN-GP paper https://arxiv.org/abs/1704.00028
-
-    Arguments:
-        netD (network)              -- discriminator network
-        real_data (tensor array)    -- real images
-        fake_data (tensor array)    -- generated images from the generator
-        device (str)                -- GPU / CPU: from torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')
-        type (str)                  -- if we mix real and fake data or not [real | fake | mixed].
-        constant (float)            -- the constant used in formula ( | |gradient||_2 - constant)^2
-        lambda_gp (float)           -- weight for this loss
-
-    Returns the gradient penalty loss
-    """
-    if lambda_gp > 0.0:
-        if type == 'real':   # either use real images, fake images, or a linear interpolation of two.
-            interpolatesv = real_data
-        elif type == 'fake':
-            interpolatesv = fake_data
-        elif type == 'mixed':
-            alpha = torch.rand(real_data.shape[0], 1, device=device)
-            alpha = alpha.expand(real_data.shape[0], real_data.nelement() // real_data.shape[0]).contiguous().view(*real_data.shape)
-            interpolatesv = alpha * real_data + ((1 - alpha) * fake_data)
-        else:
-            raise NotImplementedError('{} not implemented'.format(type))
-        interpolatesv.requires_grad_(True)
-        disc_interpolates = netD(interpolatesv)
-        gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolatesv,
-                                        grad_outputs=torch.ones(disc_interpolates.size()).to(device),
-                                        create_graph=True, retain_graph=True, only_inputs=True)
-        gradients = gradients[0].view(real_data.size(0), -1)  # flat the data
-        # gamma-center gradient penalty
-        gradient_penalty = (((gradients + 1e-16).norm(2, dim=1) - constant) ** 2 / constant ** 2).mean() * lambda_gp        # added eps
-        return gradient_penalty, gradients
-    else:
-        return 0.0, None
-
 
 class ResnetGenerator(nn.Module):
     """Resnet-based generator that consists of Resnet blocks between a few downsampling/upsampling operations.

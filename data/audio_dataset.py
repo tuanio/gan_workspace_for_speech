@@ -180,6 +180,7 @@ class AudioDataset(BaseDataset):
         parser.add_argument('--freq-width', type=int, default=25, help = "Max length of mask if --use_mask option is used.")
         parser.add_argument('--freq-masks', type=int, default=2, help = "Max length of mask if --use_mask option is used.")
         parser.add_argument('--is-pretrain', action='store_true', help='for pretraining phase')
+        parser.add_argument('--is-classification', action='store_true', help='for classification phase')
 
         return parser
 
@@ -273,45 +274,50 @@ class AudioDataset(BaseDataset):
             self.noisy_spec_paths = self.clean_spec_paths
             self.noisy_comp_dict = self.clean_comp_dict
 
-        if self.opt.is_pretrain:
+        if self.opt.is_pretrain or self.opt.is_classification:
             self.spec_paths = self.clean_spec_paths + self.noisy_spec_paths
             self.specs = self.clean_specs + self.noisy_specs
+        
+        if self.opt.classification:
+            self.labels = ([self.opt.clean_label] * len(self.clean_spec_paths)
+                                + [self.opt.noisy_label] * self.noisy_spec_paths)
 
     def get_mask(self,A):
         # Generating mask (for filling in frames) if required 
-        if self.opt.is_pretrain:
-            # ---
-            mask = torch.ones_like(A)
-            sh = mask.shape
-            for i in range(self.opt.freq_masks):
-                x_left = np.random.randint(
-                    0, max(1, sh[2] - self.opt.freq_width)
-                )
-                w = np.random.randint(0, self.opt.freq_width)
-                mask[:, x_left : x_left + w, :] = 0
+        if self.opt.phase == 'train':
+            if self.opt.is_pretrain or self.opt.is_classification:
+                # ---
+                mask = torch.ones_like(A)
+                sh = mask.shape
+                for i in range(self.opt.freq_masks):
+                    x_left = np.random.randint(
+                        0, max(1, sh[2] - self.opt.freq_width)
+                    )
+                    w = np.random.randint(0, self.opt.freq_width)
+                    mask[:, x_left : x_left + w, :] = 0
 
-            for i in range(self.opt.time_masks):
-                y_left = np.random.randint(
-                    0, max(1, sh[1] - self.opt.time_width)
-                )
-                w = np.random.randint(0, self.opt.time_width)
-                mask[:, :, y_left : y_left + w] = 0
-        else:
-            if self.opt.phase == 'train':
+                for i in range(self.opt.time_masks):
+                    y_left = np.random.randint(
+                        0, max(1, sh[1] - self.opt.time_width)
+                    )
+                    w = np.random.randint(0, self.opt.time_width)
+                    mask[:, :, y_left : y_left + w] = 0
+            else:
                 mask_size = np.random.randint(0,self.opt.max_mask_len)
                 start = np.random.randint(0,A.size(1)-mask_size)
                 end = start+mask_size
                 mask = torch.ones(1,A.size(1),A.size(2))
                 mask[:,:,start:end] = 0
-            else:
-                mask = torch.ones(1,A.size(1),A.size(2))
+        else:
+            mask = torch.ones(1,A.size(1),A.size(2))
         return mask
 
 
     def __getitem__(self,index):
-        if self.opt.is_pretrain:
+        if self.opt.is_pretrain or self.opt.is_classification:
             path = self.spec_paths[index]  # make sure index is within then range
             img = self.specs[index]
+            label = self.labels[index]
 
             tensor = torch.from_numpy(img)
             if len(tensor.size()) == 2:
@@ -319,7 +325,13 @@ class AudioDataset(BaseDataset):
 
             mask = self.get_mask(tensor)
 
-            return {'data': tensor, 'mask': mask}
+            ret = {'data': tensor, 'mask': mask}
+            
+            if not self.opt.is_classification:
+                return ret
+            
+            ret['label'] = label
+            return ret
 
         index_A = index % self.clean_specs_len
         A_path = self.clean_spec_paths[index_A]  # make sure index is within then range
@@ -378,6 +390,6 @@ class AudioDataset(BaseDataset):
         return self.noisy_specs_len
 
     def __len__(self):
-        if self.opt.is_pretrain:
+        if self.opt.is_pretrain or self.opt.is_classification:
             return len(self.spec_paths)
         return max(self.clean_specs_len,self.noisy_specs_len)
