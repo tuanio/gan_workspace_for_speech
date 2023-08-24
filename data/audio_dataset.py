@@ -278,7 +278,7 @@ class AudioDataset(BaseDataset):
             self.spec_paths = self.clean_spec_paths + self.noisy_spec_paths
             self.specs = self.clean_specs + self.noisy_specs
         
-        if self.opt.classification:
+        if self.opt.is_classification:
             self.labels = ([self.opt.clean_label] * len(self.clean_spec_paths)
                                 + [self.opt.noisy_label] * self.noisy_spec_paths)
 
