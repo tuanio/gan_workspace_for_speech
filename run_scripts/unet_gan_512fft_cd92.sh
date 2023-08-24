@@ -2,7 +2,7 @@ data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd_data_5h_clean_2.5h_noisy
 checkpoints_dir=checkpoints/
 gpu_ids=0
-config=raw_feat_512fft_lrG0.0002_lr_D0.0001_updateD_slower_5times_GP_5h_5h_100epochs
+config=cycle50_idt5_sn_gp2_lr0.0002_512fft_5h_5h_200epochs
 
 python train.py \
     --dataroot $data_cache \
@@ -52,14 +52,14 @@ python train.py \
 #
 python test.py \
     --dataroot /home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy \
-    --name unet_gan_raw_feat_512fft_lrG0.0002_lr_D0.0001_updateD_slower_5times_GP_5h_5h_100epochs \
+    --name unet_gan_cycle50_idt5_sn_gp2_lr0.0002_512fft_5h_5h_200epochs \
     --model unet_gan \
     --dataset_mode audio \
     --norm instance \
     --phase test \
     --no_dropout \
     --n_fft 512 \
-    --hop_length 32 \
+    --hop_length 64 \
     --fix_w 257 \
     --load_size_h 257 \
     --load_size_w 257 \
@@ -68,6 +68,7 @@ python test.py \
     --gpu_ids 0 \
     --input_nc 1 \
     --output_nc 1 \
+    --raw-feat \
     --use_mask
 
 # python train.py \
