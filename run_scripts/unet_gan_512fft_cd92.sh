@@ -69,6 +69,7 @@ python test.py \
     --input_nc 1 \
     --output_nc 1 \
     --raw-feat \
+    --apply_spectral_norm \
     --use_mask
 
 # python train.py \
