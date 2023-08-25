@@ -26,7 +26,7 @@ python train.py \
     --G-update-frequency 1 \
     --D-update-frequency 1 \
     --constant-gp 1 \
-    --lambda-gp 1.0 \
+    --lambda-gp 0.1 \
     --apply_spectral_norm \
     --niter 100 \
     --niter_decay 100 \
