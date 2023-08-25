@@ -42,7 +42,7 @@ python train.py \
     --max_mask_len 50 \
     --checkpoints_dir $checkpoints_dir \
     --no_html \
-    --num_threads 1 \
+    --num_threads 4 \
     --use-wandb \
     --wandb-project GAN_for_CD92 \
     --wandb-run-name unet_gan_${config}
