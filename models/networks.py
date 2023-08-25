@@ -1067,6 +1067,7 @@ class UnetSkipConnectionBlock(nn.Module):
             return self.up(self.submodule(self.down(x), y))
         elif self.innermost:
             if self.label_emb and y is not None:
+                x = self.down(x)
                 emb = self.label_emb(y).unsqueeze(-1).unsqueeze(-1)
                 x = torch.cat([x, emb], dim=1)
                 x = self.downsample_conv(x)
