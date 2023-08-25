@@ -1030,7 +1030,7 @@ class UnetSkipConnectionBlock(nn.Module):
                                         padding=1, bias=use_bias)
             down = [downrelu, downconv]
             up = [uprelu, upconv, upnorm]
-            model = down + Print('innermost') + up
+            model = down + [Print('innermost')] + up
         else:
             upconv = nn.ConvTranspose2d(inner_nc * 2, outer_nc,
                                         kernel_size=4, stride=2,
