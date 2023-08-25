@@ -1050,7 +1050,7 @@ class UnetSkipConnectionBlock(nn.Module):
                 else:
                     model = down + [submodule] + up
 
-            self.model = nn.MultiInputSequential(*model)
+            self.model = MultiInputSequential(*model)
         else:
             upconv = nn.ConvTranspose2d(inner_nc, outer_nc,
                                         kernel_size=4, stride=2,
@@ -1058,8 +1058,8 @@ class UnetSkipConnectionBlock(nn.Module):
             down = [downrelu, downconv]
             up = [uprelu, upconv, upnorm]
             # model = down + up
-            self.down = nn.MultiInputSequential(*down)
-            self.up = nn.MultiInputSequential(*up)
+            self.down = MultiInputSequential(*down)
+            self.up = MultiInputSequential(*up)
             
             if self.label_emb:
                 self.downsample_conv = nn.Conv2d(self.label_emb.embed_dim + inner_nc, inner_nc, 1, 1)
