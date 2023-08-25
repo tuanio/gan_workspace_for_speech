@@ -11,7 +11,7 @@ python train.py \
     --dataroot $data_cache \
     --name unet_gan_${config} \
     --model unet_gan \
-    --model-name unet_256_mask \
+    --model_name unet_256_mask \
     --dataset_mode audio \
     --pool_size 50 \
     --no_dropout \
