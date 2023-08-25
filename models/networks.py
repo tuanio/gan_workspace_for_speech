@@ -276,6 +276,10 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
             'conv_expansion_factor': 2,
         }
         net = BinaryConformer(**cfg)
+    elif netG == 'cond_unet_128_mask':
+        net = MaskUnetGenerator(input_nc + 1, output_nc, 7, ngf,
+                                norm_layer=norm_layer,use_dropout=use_dropout,
+                                data_shape=data_shape)
     elif netG == 'our':
         if use_mask:
             net = ResnetGenerator_mask(input_nc+1, output_nc, ngf, raw_feat, n_blocks=9)
