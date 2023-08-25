@@ -3,7 +3,7 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd93_1h_subset_cd92_cluster46_over100
 checkpoints_dir=checkpoints/
 gpu_ids=2
-config=unet256_cluster46_1h.clean_13m.noisy_200epochs
+config=unet128_cluster46_1h.clean_13m.noisy_200epochs
 
 # unet_128_mask, unet_256_mask
 
@@ -11,7 +11,7 @@ python train.py \
     --dataroot $data_cache \
     --name unet_gan_${config} \
     --model unet_gan \
-    --model_name unet_256_mask \
+    --model_name unet_128_mask \
     --dataset_mode audio \
     --pool_size 50 \
     --no_dropout \

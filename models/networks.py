@@ -178,7 +178,10 @@ def apply_sn(module, tensor_name="weight", n_power_iterations=1):
         apply_sn_to_module(m, tensor_name, n_power_iterations)
 
 
-def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[], use_mask = False, raw_feat=True, data_shape=(128, 128), spectral_norm = False):
+def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False,
+            init_type='normal', init_gain=0.02, gpu_ids=[], use_mask = False,
+            raw_feat=True, data_shape=(129, 128), spectral_norm = False,
+            condition=False, nlabels=100, embed_dim=32):
     """Create a generator
 
     Parameters:
@@ -220,11 +223,13 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
     elif netG == 'unet_128_mask':
         net = MaskUnetGenerator(input_nc + 1, output_nc, 7, ngf,
                                 norm_layer=norm_layer,use_dropout=use_dropout,
-                                data_shape=data_shape)
+                                data_shape=data_shape, condition=condition,
+                                nlabels=nlabels, embed_dim=embed_dim)
     elif netG == 'unet_256_mask':
         net = MaskUnetGenerator(input_nc + 1, output_nc, 8, ngf,
                                 norm_layer=norm_layer,use_dropout=use_dropout,
-                                data_shape=data_shape)
+                                data_shape=data_shape, condition=condition,
+                                nlabels=nlabels, embed_dim=embed_dim)
     elif netG == 'vit_unet_mask':
         cfg = {
             'in_c'               : input_nc + 1,
@@ -887,7 +892,9 @@ class ResnetBlock(nn.Module):
 class MaskUnetGenerator(nn.Module):
     """Create a Unet-based generator"""
 
-    def __init__(self, input_nc, output_nc, num_downs, ngf=64, norm_layer=nn.BatchNorm2d, use_dropout=False, data_shape=(128, 128), condition=False, nlabels=100, embed_dim=32):
+    def __init__(self, input_nc, output_nc, num_downs, ngf=64, norm_layer=nn.BatchNorm2d,
+                    use_dropout=False, data_shape=(129, 128),
+                    condition=False, nlabels=100, embed_dim=32):
         """Construct a Unet generator
         Parameters:
             input_nc (int)  -- the number of channels in input images
@@ -963,6 +970,14 @@ class UnetGenerator(nn.Module):
         """Standard forward"""
         return self.model(input)
 
+class Print(nn.Module):
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+    
+    def forward(self, x):
+        print(self.name, x.size())
+        return x
 
 class UnetSkipConnectionBlock(nn.Module):
     """Defines the Unet submodule with skip connection.
@@ -1015,7 +1030,7 @@ class UnetSkipConnectionBlock(nn.Module):
                                         padding=1, bias=use_bias)
             down = [downrelu, downconv]
             up = [uprelu, upconv, upnorm]
-            model = down + up
+            model = down + Print('innermost') + up
         else:
             upconv = nn.ConvTranspose2d(inner_nc * 2, outer_nc,
                                         kernel_size=4, stride=2,
