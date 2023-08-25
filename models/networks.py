@@ -224,12 +224,12 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False,
         net = MaskUnetGenerator(input_nc + 1, output_nc, 7, ngf,
                                 norm_layer=norm_layer,use_dropout=use_dropout,
                                 data_shape=data_shape, condition=condition,
-                                nlabels=nlabels, embed_dim=embed_dim)
+                                nlabels=nlabels, label_embed_dim=embed_dim)
     elif netG == 'unet_256_mask':
         net = MaskUnetGenerator(input_nc + 1, output_nc, 8, ngf,
                                 norm_layer=norm_layer,use_dropout=use_dropout,
                                 data_shape=data_shape, condition=condition,
-                                nlabels=nlabels, embed_dim=embed_dim)
+                                nlabels=nlabels, label_embed_dim=embed_dim)
     elif netG == 'vit_unet_mask':
         cfg = {
             'in_c'               : input_nc + 1,
@@ -894,7 +894,7 @@ class MaskUnetGenerator(nn.Module):
 
     def __init__(self, input_nc, output_nc, num_downs, ngf=64, norm_layer=nn.BatchNorm2d,
                     use_dropout=False, data_shape=(129, 128),
-                    condition=False, nlabels=100, embed_dim=32):
+                    condition=False, nlabels=100, label_embed_dim=32):
         """Construct a Unet generator
         Parameters:
             input_nc (int)  -- the number of channels in input images
