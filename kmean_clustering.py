@@ -14,6 +14,7 @@ parser.add_argument('--n-mfcc', default=25)
 parser.add_argument('--n-mels', default=80)
 parser.add_argument('--n-clusters', default=50)
 parser.add_argument('--name', default='train_cd92')
+parser.add_argument('--min-duration', default=0.5)
 parser.add_argument('--save-dir', default='/home/stud_vantuan/share_with_150/data_CD/cluster')
 parser.add_argument('--data-dir', default='/home/stud_vantuan/share_with_150/data_CD/train_CD92/wav')
 parser.add_argument('--gpu-id', default=0)
@@ -47,13 +48,14 @@ def do_kmeans(X, num_clusters):
     return kmeans(X=X, num_clusters=num_clusters,
                   distance='euclidean', device=device)
 
-cd92_5h = glob.glob(f'{args.data_dir}/*.wav')
-len(cd92_5h)
+data = glob.glob(f'{args.data_dir}/*.wav')
+len(data)
 
 wavs = []
-for i in tqdm(cd92_5h, desc='Loading wavs...'):
+for i in tqdm(data, desc='Loading wavs...'):
     w, sr = torchaudio.load(i)
-    wavs.append(w)
+    if (w.size(1) / sr) >= args.min_duration:
+        wavs.append(w)
 
 mfcc_feats = []
 for i in tqdm(wavs, desc='Calculate MFCCs...'):
@@ -66,7 +68,7 @@ cluster_labels, cluster_centroids = do_kmeans(X, NUM_CLUSTERS)
 save_path = f'KMeans_{NAME}_{NUM_CLUSTERS}.clusters'
 with open(os.path.join(SAVE_DIR, save_path), 'w') as f:
     flag = False
-    for p, l in zip(cd92_5h, cluster_labels.tolist()):
+    for p, l in zip(data, cluster_labels.tolist()):
         if flag:
             f.write('\n')
         f.write(f'{p} {l}')
