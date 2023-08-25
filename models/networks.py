@@ -938,7 +938,7 @@ class MaskUnetGenerator(nn.Module):
     def forward(self, input, mask, label=None):
         """Standard forward"""
         x = torch.cat([input, mask], dim=1)
-        return self.model(x)
+        return self.model(x, label)
 
 class UnetGenerator(nn.Module):
     """Create a Unet-based generator"""
