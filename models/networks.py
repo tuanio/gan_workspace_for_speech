@@ -1057,10 +1057,10 @@ class UnetSkipConnectionBlock(nn.Module):
 
     def forward(self, x, y=None):
         if self.outermost:
-            return self.model(x)
+            return self.model(x), y
         elif self.innermost:
             x = self.down(x)
-            if self.label_emb:
+            if self.label_emb and y is not None:
                 y = self.label_emb(x)
                 x = torch.cat([x, y], dim=1)
                 x = self.downsample_conv(x)
