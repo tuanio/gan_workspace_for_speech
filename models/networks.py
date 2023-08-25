@@ -938,7 +938,7 @@ class MaskUnetGenerator(nn.Module):
     def forward(self, input, mask, label=None):
         """Standard forward"""
         x = torch.cat([input, mask], dim=1)
-        return self.model(x, label)
+        return self.model(x)
 
 class UnetGenerator(nn.Module):
     """Create a Unet-based generator"""
@@ -1037,7 +1037,6 @@ class UnetSkipConnectionBlock(nn.Module):
                 up = [uprelu, upconv]
                 if not raw_feat:
                     up += [nn.Tanh()]
-                model = down + [submodule] + up
             else:
                 upconv = nn.ConvTranspose2d(inner_nc * 2, outer_nc,
                                             kernel_size=4, stride=2,
@@ -1046,11 +1045,9 @@ class UnetSkipConnectionBlock(nn.Module):
                 up = [uprelu, upconv, upnorm]
 
                 if use_dropout:
-                    model = down + [submodule] + up + [nn.Dropout(0.5)]
-                else:
-                    model = down + [submodule] + up
-
-            self.model = MultiInputSequential(*model)
+                    up += [nn.Dropout(0.5)]
+            
+            self.submodule = submodule
         else:
             upconv = nn.ConvTranspose2d(inner_nc, outer_nc,
                                         kernel_size=4, stride=2,
@@ -1058,31 +1055,25 @@ class UnetSkipConnectionBlock(nn.Module):
             down = [downrelu, downconv]
             up = [uprelu, upconv, upnorm]
             # model = down + up
-            self.down = MultiInputSequential(*down)
-            self.up = MultiInputSequential(*up)
             
             if self.label_emb:
                 self.downsample_conv = nn.Conv2d(self.label_emb.embed_dim + inner_nc, inner_nc, 1, 1)
+        
+        self.down = nn.Sequential(*down)
+        self.up = nn.Sequential(*up)
 
     def forward(self, x, y=None):
         if self.outermost:
-            o = self.model(x, y)
-            if y is not None:
-                return o, y
-            return o
+            return self.up(self.submodule(self.down(x), y))
         elif self.innermost:
-            x = self.down(x, y)
             if self.label_emb and y is not None:
                 y = self.label_emb(x)
                 x = torch.cat([x, y], dim=1)
                 x = self.downsample_conv(x)
             return self.up(x)
         else:   # add skip connections
-            o = torch.cat([x, self.model(x, y)], 1)
-            if y is not None:
-                return o, y
-            return o
-
+            o = self.up(self.submodule(self.down(x), y))
+            return torch.cat([x, o], 1)
 
 class NLayerDiscriminator(nn.Module):
     """Defines a PatchGAN discriminator"""
