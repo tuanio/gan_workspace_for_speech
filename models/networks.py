@@ -980,6 +980,15 @@ class Print(nn.Module):
         print(self.name, x.size())
         return x
 
+class MultiInputSequential(nn.Sequential):
+    def forward(self, *inputs):
+        for module in self:
+            if isinstance(inputs, tuple):
+                inputs = module(*inputs)
+            else:
+                inputs = module(inputs)
+        return inputs
+
 class UnetSkipConnectionBlock(nn.Module):
     """Defines the Unet submodule with skip connection.
         X -------------------identity----------------------
@@ -1041,7 +1050,7 @@ class UnetSkipConnectionBlock(nn.Module):
                 else:
                     model = down + [submodule] + up
 
-            self.model = nn.Sequential(*model)
+            self.model = nn.MultiInputSequential(*model)
         else:
             upconv = nn.ConvTranspose2d(inner_nc, outer_nc,
                                         kernel_size=4, stride=2,
@@ -1049,15 +1058,18 @@ class UnetSkipConnectionBlock(nn.Module):
             down = [downrelu, downconv]
             up = [uprelu, upconv, upnorm]
             # model = down + up
-            self.down = nn.Sequential(*down)
-            self.up = nn.Sequential(*up)
+            self.down = nn.MultiInputSequential(*down)
+            self.up = nn.MultiInputSequential(*up)
             
             if self.label_emb:
                 self.downsample_conv = nn.Conv2d(self.label_emb.embed_dim + inner_nc, inner_nc, 1, 1)
 
     def forward(self, x, y=None):
         if self.outermost:
-            return self.model(x), y
+            o = self.model(x)
+            if y is not None:
+                return o, y
+            return o
         elif self.innermost:
             x = self.down(x)
             if self.label_emb and y is not None:
@@ -1066,7 +1078,10 @@ class UnetSkipConnectionBlock(nn.Module):
                 x = self.downsample_conv(x)
             return self.up(x)
         else:   # add skip connections
-            return torch.cat([x, self.model(x)], 1)
+            o = torch.cat([x, self.model(x)], 1)
+            if y is not None:
+                return o, y
+            return o
 
 
 class NLayerDiscriminator(nn.Module):
