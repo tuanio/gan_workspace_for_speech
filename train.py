@@ -30,6 +30,7 @@ if __name__ == '__main__':
     dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
     dataset_size = len(dataset)    # get the number of images in the dataset.
     print('The number of training images = %d' % dataset_size)
+    print('Clean:', dataset.get_A_len(), 'Noisy:', dataset.get_B_len())
 
     data_shape = (opt.n_fft // 2 + 1, opt.fix_w)
 
