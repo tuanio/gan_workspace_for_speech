@@ -15,6 +15,7 @@ class UnetGANModel(BaseModel):
             parser.add_argument('--lambda_identity', type=float, default=0.5, help='use identity mapping. Setting lambda_identity other than 0 has an effect of scaling the weight of the identity mapping loss. For example, if the weight of the identity loss should be 10 times smaller than the weight of the reconstruction loss, please set lambda_identity = 0.1')
             parser.add_argument('--constant-gp', type=float, default=100, help='constant of gradient')
             parser.add_argument('--lambda-gp', type=float, default=0.1, help='gradient penalty')
+            parser.add_argument('--model_name', type=str, default='unet_128_mask')
 
         return parser
 
@@ -45,11 +46,11 @@ class UnetGANModel(BaseModel):
         # define networks (both Generators and discriminators)
         # The naming is different from those used in the paper.
         # Code (vs. paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
-        self.netG_A = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, 'unet_128_mask', opt.norm,
+        self.netG_A = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, args.model_name, opt.norm,
                                         not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids,
                                         use_mask = opt.use_mask, raw_feat=opt.raw_feat, data_shape=data_shape,
                                         spectral_norm=opt.apply_spectral_norm)
-        self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, 'unet_128_mask', opt.norm,
+        self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, args.model_name, opt.norm,
                                         not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids,
                                         use_mask = opt.use_mask, raw_feat=opt.raw_feat, data_shape=data_shape,
                                         spectral_norm=opt.apply_spectral_norm)

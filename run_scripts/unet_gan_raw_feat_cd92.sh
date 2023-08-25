@@ -2,13 +2,16 @@
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd_data_5h_clean_2.5h_noisy
 data_cache=/home/stud_vantuan/share_with_150/cache/cd93_1h_subset_cd92_cluster46_over100
 checkpoints_dir=checkpoints/
-gpu_ids=3
-config=cluster46_1h.clean_13m.noisy_200epochs
+gpu_ids=2
+config=unet256_cluster46_1h.clean_13m.noisy_200epochs
+
+# unet_128_mask, unet_256_mask
 
 python train.py \
     --dataroot $data_cache \
     --name unet_gan_${config} \
     --model unet_gan \
+    --model-name unet_256_mask \
     --dataset_mode audio \
     --pool_size 50 \
     --no_dropout \
@@ -28,8 +31,8 @@ python train.py \
     --constant-gp 1 \
     --lambda-gp 0.1 \
     --apply_spectral_norm \
-    --niter 60 \
-    --niter_decay 60 \
+    --niter 100 \
+    --niter_decay 100 \
     --gpu_ids $gpu_ids \
     --display_id 0 \
     --display_freq 200 \
@@ -93,22 +96,24 @@ python train.py \
 #     --wandb-run-name unet_gan_${config}
 
 # # 
-# python test.py \
-#     --dataroot /home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy \
-#     --name unet_gan_cut30_thres100_cut_noisy_feat_lrG0.0002_lr_D0.0002_updateD_faster_2times_GP_5h_2.5h_100epochs \
-#     --model unet_gan \
-#     --dataset_mode audio \
-#     --norm instance \
-#     --phase test \
-#     --load_size_h 129 \
-#     --load_size_w 128 \
-#     --crop_size 128 \
-#     --no_dropout \
-#     --batch_size 1 \
-#     --gpu_ids 3 \
-#     --input_nc 1 \
-#     --output_nc 1 \
-#     --use_mask
+python test.py \
+    --dataroot /home/stud_vantuan/share_with_150/cache/cd93_1h_subset_cd92_cluster46_over100 \
+    --name unet_gan_cluster46_1h.clean_13m.noisy_200epochs \
+    --model unet_gan \
+    --dataset_mode audio \
+    --norm instance \
+    --phase test \
+    --load_size_h 129 \
+    --load_size_w 128 \
+    --crop_size 128 \
+    --no_dropout \
+    --batch_size 1 \
+    --gpu_ids 1 \
+    --input_nc 1 \
+    --output_nc 1 \
+    --raw-feat \
+    --apply_spectral_norm \
+    --use_mask
 
 # python train.py \
 #     --dataroot $data_cache \

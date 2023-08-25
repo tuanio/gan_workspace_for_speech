@@ -156,3 +156,5 @@ def get_activ_layer(activ):
         return nn.Sigmoid()
 
     raise ValueError("Unknown activation: '%s'" % name)
+
+

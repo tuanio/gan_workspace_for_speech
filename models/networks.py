@@ -221,6 +221,10 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
         net = MaskUnetGenerator(input_nc + 1, output_nc, 7, ngf,
                                 norm_layer=norm_layer,use_dropout=use_dropout,
                                 data_shape=data_shape)
+    elif netG == 'unet_256_mask':
+        net = MaskUnetGenerator(input_nc + 1, output_nc, 8, ngf,
+                                norm_layer=norm_layer,use_dropout=use_dropout,
+                                data_shape=data_shape)
     elif netG == 'vit_unet_mask':
         cfg = {
             'in_c'               : input_nc + 1,
@@ -342,6 +346,20 @@ def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal'
         apply_sn(net)
     
     return net
+
+
+class UnitNormEmbedding(nn.Module):
+    ''' projects class embedding onto hypersphere and returns the concat of the latent and the class embedding '''
+
+    def __init__(self, nlabels, embed_dim):
+        super().__init__()
+        self.embedding = nn.Embedding(nlabels, embed_dim)
+
+    def forward(self, y):
+        # y is label
+        yembed = self.embedding(y)
+        yembed = yembed / torch.norm(yembed, p=2, dim=1, keepdim=True)
+        return yembed
 
 ##############################################################################
 # Classes
@@ -869,7 +887,7 @@ class ResnetBlock(nn.Module):
 class MaskUnetGenerator(nn.Module):
     """Create a Unet-based generator"""
 
-    def __init__(self, input_nc, output_nc, num_downs, ngf=64, norm_layer=nn.BatchNorm2d, use_dropout=False, data_shape=(128, 128)):
+    def __init__(self, input_nc, output_nc, num_downs, ngf=64, norm_layer=nn.BatchNorm2d, use_dropout=False, data_shape=(128, 128), condition=False, nlabels=100, embed_dim=32):
         """Construct a Unet generator
         Parameters:
             input_nc (int)  -- the number of channels in input images
@@ -889,6 +907,12 @@ class MaskUnetGenerator(nn.Module):
         # (129, 128) -> (5, 4)
         # (257, 257) -> (5, 5)
 
+        if condition:
+            self.label_emb = nn.Sequential(
+                UnitNormEmbedding(nlabels=nlabels, embed_dim=label_embed_dim),
+                nn.Linear(label_embed_dim, ngf * 8)
+            )
+
         # construct unet structure
         unet_block = UnetSkipConnectionBlock(ngf * 8, ngf * 8, input_nc=None, submodule=None, norm_layer=norm_layer, innermost=True)  # add the innermost layer
         for i in range(num_downs - 5):          # add intermediate layers with ngf * 8 filters
@@ -902,7 +926,8 @@ class MaskUnetGenerator(nn.Module):
                                                 norm_layer=norm_layer, raw_feat=True,
                                                 outermost_kernelsize=(outer_ker_sz_h, outer_ker_sz_w))  # add the outermost layer
 
-    def forward(self, input, mask):
+
+    def forward(self, input, mask, label=None):
         """Standard forward"""
         x = torch.cat([input, mask], dim=1)
         return self.model(x)
@@ -1090,3 +1115,5 @@ class PixelDiscriminator(nn.Module):
     def forward(self, input):
         """Standard forward."""
         return self.net(input)
+
+# ---
