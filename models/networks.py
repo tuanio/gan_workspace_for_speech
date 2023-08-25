@@ -1063,18 +1063,17 @@ class UnetSkipConnectionBlock(nn.Module):
         self.up = nn.Sequential(*up)
 
     def forward(self, x, y=None):
-        x = self.down(x)
+        xx = self.down(x)
         if self.outermost:
-            return self.up(self.submodule(x, y))
-        elif self.innermost:
+            return self.up(self.submodule(xx, y))
+        else:
             if self.label_emb and y is not None:
                 emb = self.label_emb(y).unsqueeze(-1).unsqueeze(-1)
-                x = torch.cat([x, emb], dim=1)
-                x = self.downsample_conv(x)
-            return self.up(x)
-        else:   # add skip connections
-            o = self.up(self.submodule(x, y))
-            return torch.cat([x, o], 1)
+                xx = torch.cat([xx, emb], dim=1)
+                xx = self.downsample_conv(xx)
+            else:
+                xx = self.submodule(xx, y)
+            return torch.cat([x, self.up(xx)], 1)
 
 class NLayerDiscriminator(nn.Module):
     """Defines a PatchGAN discriminator"""
