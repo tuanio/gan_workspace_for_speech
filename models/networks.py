@@ -1066,19 +1066,19 @@ class UnetSkipConnectionBlock(nn.Module):
 
     def forward(self, x, y=None):
         if self.outermost:
-            o = self.model(x)
+            o = self.model(x, y)
             if y is not None:
                 return o, y
             return o
         elif self.innermost:
-            x = self.down(x)
+            x = self.down(x, y)
             if self.label_emb and y is not None:
                 y = self.label_emb(x)
                 x = torch.cat([x, y], dim=1)
                 x = self.downsample_conv(x)
             return self.up(x)
         else:   # add skip connections
-            o = torch.cat([x, self.model(x)], 1)
+            o = torch.cat([x, self.model(x, y)], 1)
             if y is not None:
                 return o, y
             return o
