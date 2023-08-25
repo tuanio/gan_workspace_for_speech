@@ -1019,40 +1019,41 @@ class UnetSkipConnectionBlock(nn.Module):
         uprelu = nn.ReLU(True)
         upnorm = norm_layer(outer_nc)
 
-        if outermost:
-            upconv = nn.ConvTranspose2d(inner_nc * 2, outer_nc,
-                                        kernel_size=outermost_kernelsize, stride=2,
-                                        padding=1)
-            down = [downconv]
-            up = [uprelu, upconv]
-            if not raw_feat:
-                up += [nn.Tanh()]
-            model = down + [submodule] + up
-        elif innermost:
+        if not innermost:
+            if outermost:
+                upconv = nn.ConvTranspose2d(inner_nc * 2, outer_nc,
+                                            kernel_size=outermost_kernelsize, stride=2,
+                                            padding=1)
+                down = [downconv]
+                up = [uprelu, upconv]
+                if not raw_feat:
+                    up += [nn.Tanh()]
+                model = down + [submodule] + up
+            else:
+                upconv = nn.ConvTranspose2d(inner_nc * 2, outer_nc,
+                                            kernel_size=4, stride=2,
+                                            padding=1, bias=use_bias)
+                down = [downrelu, downconv, downnorm]
+                up = [uprelu, upconv, upnorm]
+
+                if use_dropout:
+                    model = down + [submodule] + up + [nn.Dropout(0.5)]
+                else:
+                    model = down + [submodule] + up
+
+            self.model = nn.Sequential(*model)
+        else:
             upconv = nn.ConvTranspose2d(inner_nc, outer_nc,
                                         kernel_size=4, stride=2,
                                         padding=1, bias=use_bias)
             down = [downrelu, downconv]
             up = [uprelu, upconv, upnorm]
             # model = down + up
-            self.down = nn.Sequential(down)
-            self.up = nn.Sequential(up)
+            self.down = nn.Sequential(*down)
+            self.up = nn.Sequential(*up)
             
             if self.label_emb:
                 self.downsample_conv = nn.Conv2d(self.label_emb.embed_dim + inner_nc, inner_nc, 1, 1)
-        else:
-            upconv = nn.ConvTranspose2d(inner_nc * 2, outer_nc,
-                                        kernel_size=4, stride=2,
-                                        padding=1, bias=use_bias)
-            down = [downrelu, downconv, downnorm]
-            up = [uprelu, upconv, upnorm]
-
-            if use_dropout:
-                model = down + [submodule] + up + [nn.Dropout(0.5)]
-            else:
-                model = down + [submodule] + up
-
-        self.model = nn.Sequential(*model)
 
     def forward(self, x, y=None):
         if self.outermost:
