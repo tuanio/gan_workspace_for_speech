@@ -28,8 +28,8 @@ python train.py \
     --constant-gp 1 \
     --lambda-gp 0.1 \
     --apply_spectral_norm \
-    --niter 100 \
-    --niter_decay 100 \
+    --niter 60 \
+    --niter_decay 60 \
     --gpu_ids $gpu_ids \
     --display_id 0 \
     --display_freq 200 \
