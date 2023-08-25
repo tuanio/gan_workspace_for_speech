@@ -20,7 +20,7 @@ python train.py \
     --load_size_w 128 \
     --crop_size 128 \
     --preprocess none \
-    --batch_size 1 \
+    --batch_size 8 \
     --lr_G 0.0002 \
     --lr_D 0.0002 \
     --G-update-frequency 1 \
