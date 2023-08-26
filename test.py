@@ -157,11 +157,12 @@ def save_audio_raw(opt, visuals_list, img_path, use_phase=False, label='fakeA'):
             else:
                 mag_spec = np.concatenate((mag_spec, im), axis=-1) #concatenating specs to obtain original.
     
-    data, sr = getTimeSeriesRaw(mag_spec, phase_spec, img_path, opt.spec_power, opt.energy, state = opt.phase, use_phase=use_phase, n_fft=opt.n_fft, fix_w=opt.fix_w, hop_length=opt.hop_length)
+    data, sr = getTimeSeriesRaw(mag_spec, phase_spec, img_path, opt.spec_power, opt.energy,
+                                state=opt.phase, use_phase=use_phase, n_fft=opt.n_fft,
+                                fix_w=opt.fix_w, hop_length=opt.hop_length)
     # plt.matshow(mag_spec)
     # plt.savefig(save_path)
-    print('Output')
-    print(data.shape)
+    print('Output:', data.shape)
     sf.write(save_path, data, sr)
 
     return
@@ -224,8 +225,11 @@ if __name__ == '__main__':
             visuals_list.append(visuals)
             comps_processed += 1
 
-        print("saving: ", img_path[0])
+        print("Saving...", img_path[0])
         save_audio_raw(opt, visuals_list, img_path, use_phase=opt.use_phase, label='fake_B')
+
+        idx += 1
+
         # save_audio(opt, visuals_list, img_path, use_phase=opt.use_phase, label='real_A')
         # save_audio(opt, visuals_list, img_path, use_phase=opt.use_phase, label='a1_b')
         # save_audio(opt, visuals_list, img_path, use_phase=opt.use_phase, label='a2_b')
@@ -241,37 +245,36 @@ if __name__ == '__main__':
 
 
         #save_audio(opt, visuals_list, img_path, use_phase=opt.use_phase, label='rec_A')
-        idx += 1
     
     ## B -> A
 
-    ds_len = dataset.get_B_len()
-    idx = 0
-    datas = []
-    for i, data in enumerate(dataset):
-        datas.append(data)
-    while idx < ds_len:
+    # ds_len = dataset.get_B_len()
+    # idx = 0
+    # datas = []
+    # for i, data in enumerate(dataset):
+    #     datas.append(data)
+    # while idx < ds_len:
 
-        model.set_input(datas[idx])
-        model.test()
-        visuals = model.get_current_visuals()
-        img_path = datas[idx]['B_paths']
-        print(img_path)
-        visuals_list = [visuals]
-        num_comps = datas[idx]["B_comps"]
-        print(num_comps)
-        comps_processed = 1
+    #     model.set_input(datas[idx])
+    #     model.test()
+    #     visuals = model.get_current_visuals()
+    #     img_path = datas[idx]['B_paths']
+    #     print(img_path)
+    #     visuals_list = [visuals]
+    #     num_comps = datas[idx]["B_comps"]
+    #     print(num_comps)
+    #     comps_processed = 1
 
-        while(comps_processed < num_comps):
-            idx += 1
-            model.set_input(datas[idx])
-            model.test()
-            visuals = model.get_current_visuals()
-            img_path = datas[idx]["B_paths"]
-            visuals_list.append(visuals)
-            comps_processed += 1
+    #     while(comps_processed < num_comps):
+    #         idx += 1
+    #         model.set_input(datas[idx])
+    #         model.test()
+    #         visuals = model.get_current_visuals()
+    #         img_path = datas[idx]["B_paths"]
+    #         visuals_list.append(visuals)
+    #         comps_processed += 1
 
-        print("saving: ", img_path[0])
-        save_audio_raw(opt, visuals_list, img_path, use_phase=opt.use_phase, label='fake_A')
-        idx += 1
+    #     print("saving: ", img_path[0])
+    #     save_audio_raw(opt, visuals_list, img_path, use_phase=opt.use_phase, label='fake_A')
+    #     idx += 1
         

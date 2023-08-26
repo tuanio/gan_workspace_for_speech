@@ -90,6 +90,8 @@ class BaseOptions():
         parser.add_argument('--label_A_path', type=str, default=None) # for clean
         parser.add_argument('--label_B_path', type=str, default=None) # for noisy
 
+        parser.add_argument('--model_name', type=str, default='unet_128_mask')
+
         self.initialized = True
         return parser
 

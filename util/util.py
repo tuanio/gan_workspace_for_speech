@@ -198,7 +198,8 @@ def getTimeSeries(im_mag, im_phase, img_path, pow, energy = 1.0, state = None, u
 
     return reconstruct(res_mag, im_phase)/energy if use_phase else reconstruct(res_mag, phase)/energy, sr
 
-def getTimeSeriesRaw(im_mag, im_phase, img_path, pow, energy = 1.0, state = None, n_fft=256, fix_w=128, hop_length=64, use_phase=False):
+def getTimeSeriesRaw(im_mag, im_phase, img_path, pow, energy = 1.0, state = None,
+                        n_fft=256, fix_w=128, hop_length=64, use_phase=False):
 
     """
     Modified by Leander Maben.
@@ -210,7 +211,7 @@ def getTimeSeriesRaw(im_mag, im_phase, img_path, pow, energy = 1.0, state = None
     mag_spec, phase, sr = extract(img_path[0], n_fft=n_fft, hop_length=hop_length, energy=energy, state = state)
 
     h, w = mag_spec.shape
-    print(f'Initial: {im_mag.shape}')
+    # print(f'Initial: {im_mag.shape}')
     ######Ignoring padding
     mod_fix_w = w % fix_w
     extra_cols = 0
@@ -220,14 +221,14 @@ def getTimeSeriesRaw(im_mag, im_phase, img_path, pow, energy = 1.0, state = None
         if use_phase:
             im_phase = im_phase[:, :-extra_cols]
     #########################
-    print("im shape (ex. padding) = ", im_mag.shape)
-    print("spec shape (original) = ", mag_spec.shape)
+    # print("im shape (ex. padding) = ", im_mag.shape)
+    # print("spec shape (original) = ", mag_spec.shape)
 
     res_mag = im_mag
 
-    return reconstruct(res_mag, im_phase)/energy if use_phase else reconstruct(res_mag, phase)/energy, sr
+    return reconstruct(res_mag, im_phase, hop_length)/energy if use_phase else reconstruct(res_mag, phase, hop_length)/energy, sr
 
-def reconstruct(mag_spec, phase):
+def reconstruct(mag_spec, phase, hop_length=64):
     """
         Reconstructs frames from a spectrogram and phase information.
         Arguments:
@@ -235,7 +236,7 @@ def reconstruct(mag_spec, phase):
             phase:  Phase info. of a spectrogram
     """
     temp = mag_spec * np.exp(phase * 1j)
-    data_out = librosa.istft(temp, hop_length=64)
+    data_out = librosa.istft(temp, hop_length=hop_length)
     return data_out
 
 # to convert the spectrogram ( an 2d-array of real numbers) to a storable form (0-255)
