@@ -375,11 +375,14 @@ class AudioDataset(BaseDataset):
             if len(B.size()) == 2:
                 B = B.unsqueeze(0)
 
-        if A_label is not None:
-            A_label = torch.tensor(A_label)
+        if A_label is None:
+            A_label = 0
         
-        if B_label is not None:
-            B_label = torch.tensor(B_label)
+        if B_label is None:
+            B_label = 0
+
+        A_label = torch.tensor(A_label)
+        B_label = torch.tensor(B_label)
 
         if (self.phase).lower() == 'train':
             if self.opt.use_mask:
