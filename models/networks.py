@@ -304,7 +304,9 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False,
     return net
 
 
-def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal', init_gain=0.02, gpu_ids=[], spectral_norm=False):
+def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal',
+            init_gain=0.02, gpu_ids=[], spectral_norm=False,
+            condition=False, nlabels=100, embed_dim=32):
     """Create a discriminator
 
     Parameters:
@@ -337,8 +339,14 @@ def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal'
     net = None
     norm_layer = get_norm_layer(norm_type=norm)
 
-    if netD == 'basic':  # default PatchGAN classifier
-        net = NLayerDiscriminator(input_nc, ndf, n_layers=3, norm_layer=norm_layer)
+    if netD == 'basic' and condition:
+        if condition:
+            net = NLayerConditionalDiscriminator(input_nc, ndf, n_layers=3,
+                                                norm_layer=norm_layer,
+                                                nlabels=nlabels,
+                                                embed_dim=embed_dim)
+        else:
+            net = NLayerDiscriminator(input_nc, ndf, n_layers=3, norm_layer=norm_layer)
     elif netD == 'n_layers':  # more options
         net = NLayerDiscriminator(input_nc, ndf, n_layers_D, norm_layer=norm_layer)
     elif netD == 'pixel':     # classify if each pixel is real or fake
@@ -1121,6 +1129,68 @@ class NLayerDiscriminator(nn.Module):
     def forward(self, input):
         """Standard forward."""
         return self.model(input)
+
+class NLayerConditionalDiscriminator(nn.Module):
+    """Defines a PatchGAN discriminator"""
+
+    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d, nlabels=1, embed_dim=32):
+        """Construct a PatchGAN discriminator
+
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            ndf (int)       -- the number of filters in the last conv layer
+            n_layers (int)  -- the number of conv layers in the discriminator
+            norm_layer      -- normalization layer
+        """
+        super(NLayerConditionalDiscriminator, self).__init__()
+        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
+            use_bias = norm_layer.func == nn.InstanceNorm2d
+        else:
+            use_bias = norm_layer == nn.InstanceNorm2d
+        
+        self.embed_dim = embed_dim
+        self.embedding = UnitNormEmbedding(nlabels, embed_dim)
+        self.downsampling_conv = nn.Conv2d(ndf + embed_dim, ndf, 1, 1)
+
+        kw = 4
+        padw = 1
+        self.first_conv = nn.Sequential(
+            nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw),
+            nn.LeakyReLU(0.2, True)
+        )
+
+        sequence = []
+        nf_mult = 1
+        nf_mult_prev = 1
+        for n in range(1, n_layers):  # gradually increase the number of filters
+            nf_mult_prev = nf_mult
+            nf_mult = min(2 ** n, 8)
+            sequence += [
+                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=2, padding=padw, bias=use_bias),
+                norm_layer(ndf * nf_mult),
+                nn.LeakyReLU(0.2, True)
+            ]
+
+        nf_mult_prev = nf_mult
+        nf_mult = min(2 ** n_layers, 8)
+        sequence += [
+            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=1, padding=padw, bias=use_bias),
+            norm_layer(ndf * nf_mult),
+            nn.LeakyReLU(0.2, True)
+        ]
+
+        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        self.model = nn.Sequential(*sequence)
+
+    def forward(self, input, label):
+        """Standard forward."""
+        o = self.first_conv(input)
+        o_label = self.embedding(label).unsqueeze(-1).unsqueeze(-1)
+        o_label = o_label.expand(o.size(0), o_label.size(1),
+                                 o.size(2), o.size(3))
+        x = torch.cat([o, o_label], dim=1)
+        x = self.downsampling_conv(x)
+        return self.model(x)
 
 
 class PixelDiscriminator(nn.Module):
