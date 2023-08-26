@@ -109,8 +109,8 @@ class ConditionalGANModel(BaseModel):
             self.A_mask = input['A_mask' if AtoB else 'B_mask'].to(self.device)
             self.B_mask = input['B_mask' if AtoB else 'A_mask'].to(self.device)
         
-        self.label_A = input['B_label' if AtoB else 'A_label'].to(self.device)
-        self.label_B = input['A_label' if AtoB else 'B_label'].to(self.device)
+        self.label_A = torch.LongTensor(input['B_label' if AtoB else 'A_label']).to(self.device)
+        self.label_B = torch.LongTensor(input['A_label' if AtoB else 'B_label']).to(self.device)
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""

@@ -53,6 +53,8 @@ python train.py \
     --checkpoints_dir $checkpoints_dir \
     --no_html \
     --num_threads 8 \
+    --pin_memory \
+    --persistent_workers \
     --use-wandb \
     --wandb-project GAN_for_CD92 \
     --wandb-run-name unet_gan_${config}
