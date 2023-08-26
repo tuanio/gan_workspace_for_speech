@@ -398,7 +398,10 @@ class AudioDataset(BaseDataset):
             if self.opt.use_mask:
                 A_mask = self.get_mask(A)
                 B_mask = self.get_mask(B)
-                return {'A': A, 'B': B, 'A_mask':A_mask, 'B_mask':B_mask, 'A_paths': A_path, 'B_paths': B_path, 'A_comps': self.clean_comp_dict[A_path], 'B_comps':self.noisy_comp_dict[B_path]}
+                return {'A': A, 'B': B, 'A_mask':A_mask, 'B_mask':B_mask,
+                        'A_label': A_label, 'B_label': B_label, 
+                        'A_paths': A_path, 'B_paths': B_path,
+                        'A_comps': self.clean_comp_dict[A_path], 'B_comps':self.noisy_comp_dict[B_path]}
             else:
                 return {'A': A, 'B': B, 'A_paths': A_path, 'B_paths': B_path, 'A_comps': self.clean_comp_dict[A_path], 'B_comps':self.noisy_comp_dict[B_path]}
 
