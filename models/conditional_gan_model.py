@@ -203,14 +203,14 @@ class ConditionalGANModel(BaseModel):
             self.loss_idt_B = 0
 
         # GAN loss D_A(G_A(A))
-        self.loss_G_A = self.criterionGAN(self.netD_A(self.fake_B), True)
+        self.loss_G_A = self.criterionGAN(self.netD_A(self.fake_B, self.label_A), True)
         # GAN loss D_B(G_B(B))
-        self.loss_G_B = self.criterionGAN(self.netD_B(self.fake_A), True)
+        self.loss_G_B = self.criterionGAN(self.netD_B(self.fake_A, self.label_B), True)
         if self.opt.use_cycled_discriminators:
             # Cycled Adversarial loss D2_A(G_B(G_A(A)))
-            self.loss_G2_A = self.criterionGAN(self.netD2_A(self.rec_A), True)
+            self.loss_G2_A = self.criterionGAN(self.netD2_A(self.rec_A, self.label_B), True)
             # Cycled Adversarial loss D2_B(G_A(G_B(B)))
-            self.loss_G2_B = self.criterionGAN(self.netD2_B(self.rec_B), True)
+            self.loss_G2_B = self.criterionGAN(self.netD2_B(self.rec_B, self.label_A), True)
         else:
             self.loss_G2_A = 0
             self.loss_G2_B = 0
