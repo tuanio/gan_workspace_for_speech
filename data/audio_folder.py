@@ -33,6 +33,6 @@ def make_dataset_audio(dir, max_dataset_size=float("inf"), label_path=None):
     with open(label_path, 'r') as f:
         for l in tqdm(f, desc="Fetching wavs..."):
             p, label = l.split(' ')
-            audios.append((p, label))
+            audios.append((p, int(label)))
     
     return audios
