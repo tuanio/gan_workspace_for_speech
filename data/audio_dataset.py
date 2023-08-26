@@ -375,6 +375,9 @@ class AudioDataset(BaseDataset):
             if len(B.size()) == 2:
                 B = B.unsqueeze(0)
 
+        A_label = torch.LongTensor([A_label])
+        B_label = torch.LongTensor([B_label])
+
         if (self.phase).lower() == 'train':
             if self.opt.use_mask:
                 A_mask = self.get_mask(A)
