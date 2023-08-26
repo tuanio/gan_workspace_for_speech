@@ -24,7 +24,7 @@ python train.py \
     --load_size_w 128 \
     --crop_size 128 \
     --preprocess none \
-    --batch_size 16 \
+    --batch_size 4 \
     --lr_G 0.0002 \
     --lr_D 0.0002 \
     --G-update-frequency 1 \
@@ -52,7 +52,7 @@ python train.py \
     --max_mask_len 50 \
     --checkpoints_dir $checkpoints_dir \
     --no_html \
-    --num_threads 8 \
+    --num_threads 2 \
     --pin_memory \
     --persistent_workers \
     --use-wandb \
