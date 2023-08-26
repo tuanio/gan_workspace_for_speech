@@ -1,9 +1,9 @@
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd92.93_95_with_5h_clean_and_5h_noisy
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd_data_5h_clean_2.5h_noisy
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd93_1h_subset_cd92_cluster46_over100
-data_cache=/home/stud_vantuan/share_with_150/cache/cd93_10h_9h
+data_cache=/home/stud_vantuan/share_with_150/cache/cd92_10h_9h_cond
 checkpoints_dir=checkpoints/
-gpu_ids=2
+gpu_ids=0
 config=cond_dim32_unet128_label.clean1_noisy100_10h_9h_200epochs
 
 # unet_128_mask, unet_256_mask
