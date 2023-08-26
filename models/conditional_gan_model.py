@@ -234,7 +234,7 @@ class ConditionalGANModel(BaseModel):
             self.backward_D_A(self.label_A)      # calculate gradients for D_A
             self.backward_D_B(self.label_B)      # calculate graidents for D_B
             if self.opt.use_cycled_discriminators:
-                self.backward_D2_A(self.label_A)      # calculate gradients for D2_A
-                self.backward_D2_B(self.label_B)      # calculate graidents for D2_B
+                self.backward_D2_A(self.label_B)      # calculate gradients for D2_A
+                self.backward_D2_B(self.label_A)      # calculate graidents for D2_B
             self.optimizer_D.step()  # update D_A and D_B's weights
 
