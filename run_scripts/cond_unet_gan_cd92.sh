@@ -4,7 +4,7 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd93_10h_9h
 checkpoints_dir=checkpoints/
 gpu_ids=2
-config=cond_dim32_unet128_label.clean1_noisy100_10h_9h_400epochs
+config=cond_dim32_unet128_label.clean1_noisy100_10h_9h_200epochs
 
 # unet_128_mask, unet_256_mask
 
@@ -24,7 +24,7 @@ python train.py \
     --load_size_w 128 \
     --crop_size 128 \
     --preprocess none \
-    --batch_size 8 \
+    --batch_size 16 \
     --lr_G 0.0002 \
     --lr_D 0.0002 \
     --G-update-frequency 1 \
@@ -36,10 +36,10 @@ python train.py \
     --label_embed_dim 32 \
     --num_labels_A 1 \
     --num_labels_B 100 \
-    --label_A_path  \
-    --label_B_path  \
-    --niter 200 \
-    --niter_decay 200 \
+    --label_A_path /home/stud_vantuan/share_with_150/cache/cd92_10h_9h_cond/label/KMeans_train_clean_cd93_1.clusters \
+    --label_B_path /home/stud_vantuan/share_with_150/cache/cd92_10h_9h_cond/label/KMeans_train_noisy_cd92_100.clusters \
+    --niter 100 \
+    --niter_decay 100 \
     --gpu_ids $gpu_ids \
     --display_id 0 \
     --display_freq 200 \

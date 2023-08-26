@@ -144,13 +144,14 @@ def split_and_save(mag_spec, phase_spec, fix_w=128, pow=1.0, state = "Train", ch
 
 def processInput(filepath, power, state, channels, use_phase, n_fft=256, hop_length=64,
                     fix_w=128, is_clean=False, threshold_to_cut=0, minimum_start_end=10000,
-                    cut_clean=False, cut_noisy=False):
+                    cut_clean=False, cut_noisy=False, label=None):
     mag_spec, phase, sr = util.extract(filename=filepath, n_fft=n_fft, hop_length=hop_length, energy=1.0, state=state)
     components = split_and_save(mag_spec, phase, fix_w=fix_w, pow=power, state = state,
                                 channels = channels, use_phase=use_phase, is_clean=is_clean,
                                 threshold_to_cut=threshold_to_cut, minimum_start_end=minimum_start_end,
                                 cut_clean=cut_clean, cut_noisy=cut_noisy)
-    return components
+
+    return components, [label] * len(components)
 
 
 def countComps(sample):
@@ -194,7 +195,6 @@ class AudioDataset(BaseDataset):
             self.dir_B = os.path.join(opt.dataroot,opt.class_ids[1],opt.phase)
             self.B_paths = sorted(make_dataset_audio(self.dir_B, opt.max_dataset_size, opt.label_B_path))
 
-
         self.opt=opt
         self.spec_power = opt.spec_power
         self.energy = opt.energy
@@ -233,7 +233,7 @@ class AudioDataset(BaseDataset):
         partial_process_input = partial(processInput, is_clean=True, **params)
 
         #Compute the spectrogram components parallelly to make it more efficient; uses Joblib, maintains order of input data passed.
-        self.clean_specs = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(partial_process_input)(i, self.spec_power, self.phase, self.channels, self.opt.use_phase) for i in self.A_paths)
+        self.clean_specs, self.clean_labels = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(partial_process_input)(p, self.spec_power, self.phase, self.channels, self.opt.use_phase, label=label) for p, label in self.A_paths)
         #self.clean_specs = [processInput(i, self.spec_power, self.phase, self.channels) for i in self.A_paths]
 
         #calculate no. of components in each sample
@@ -248,6 +248,7 @@ class AudioDataset(BaseDataset):
 
         ##To separate the components; will treat every component as an individual sample
         self.clean_specs = list(chain.from_iterable(self.clean_specs))
+        self.clean_labels = list(chain.from_iterable(self.clean_labels))
         self.clean_specs_len = len(self.clean_specs)
         assert self.clean_specs_len == len(self.clean_spec_paths)
 
@@ -256,7 +257,7 @@ class AudioDataset(BaseDataset):
             
             partial_process_input_noisy = partial(processInput, is_clean=False, **params)
 
-            self.noisy_specs = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(partial_process_input_noisy)(i, self.spec_power, self.phase, self.channels, self.opt.use_phase) for i in self.B_paths)
+            self.noisy_specs, self.noisy_labels = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(partial_process_input_noisy)(p, self.spec_power, self.phase, self.channels, self.opt.use_phase, label=label) for p, label in self.B_paths)
             self.no_comps_noisy = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(countComps)(i) for i in self.noisy_specs)
 
             self.noisy_spec_paths = []
@@ -265,6 +266,7 @@ class AudioDataset(BaseDataset):
                 self.noisy_spec_paths += [nameB] * countB
                 self.noisy_comp_dict[nameB] = countB
             self.noisy_specs = list(chain.from_iterable(self.noisy_specs))
+            self.noisy_labels = list(chain.from_iterable(self.noisy_labels))
             self.noisy_specs_len = len(self.noisy_specs)
             assert self.noisy_specs_len == len(self.noisy_spec_paths)
             del self.no_comps_noisy
@@ -336,6 +338,7 @@ class AudioDataset(BaseDataset):
         index_A = index % self.clean_specs_len
         A_path = self.clean_spec_paths[index_A]  # make sure index is within then range
         A_img = self.clean_specs[index_A]
+        A_label = self.clean_labels[index_A]
         if self.opt.use_phase:
             transform_params_A = get_params(self.opt, A_img[0].size)
             A_transform = get_transform(self.opt, transform_params_A, grayscale=self.opt.grayscale)
@@ -355,6 +358,7 @@ class AudioDataset(BaseDataset):
             index_B = random.randint(0, self.noisy_specs_len - 1)
         B_path = self.noisy_spec_paths[index_B]
         B_img = self.noisy_specs[index_B]
+        B_label = self.noisy_labels[index_B]
         if self.opt.use_phase:
             transform_params_B = get_params(self.opt, B_img[0].size)
             B_transform = get_transform(self.opt, transform_params_B, grayscale=self.opt.grayscale)
@@ -371,7 +375,9 @@ class AudioDataset(BaseDataset):
             if self.opt.use_mask:
                 A_mask = self.get_mask(A)
                 B_mask = self.get_mask(B)
-                return {'A': A, 'B': B, 'A_mask':A_mask, 'B_mask':B_mask, 'A_paths': A_path, 'B_paths': B_path}
+                return {'A': A, 'B': B, 'A_mask': A_mask, 'B_mask':B_mask,
+                            'A_label': A_label, 'B_label': B_label, 
+                            'A_paths': A_path, 'B_paths': B_path}
             else:
                 return {'A': A, 'B': B, 'A_paths': A_path, 'B_paths': B_path}
 
