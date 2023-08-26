@@ -14,7 +14,7 @@ def is_audio_file(filename):
     return any(filename.endswith(extension) for extension in AUDIO_EXTENSIONS)
 
 
-def make_dataset_audio(dir, max_dataset_size=float("inf")):
+def make_dataset_audio(dir, max_dataset_size=float("inf"), label_path=None):
     audios = []
     assert os.path.isdir(dir), '%s is not a valid directory' % dir
 
@@ -23,4 +23,6 @@ def make_dataset_audio(dir, max_dataset_size=float("inf")):
             if is_audio_file(fname):
                 path = os.path.join(root, fname)
                 audios.append(path)
+    
+    labels = open
     return audios[:min(max_dataset_size, len(audios))]

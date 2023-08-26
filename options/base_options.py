@@ -80,6 +80,14 @@ class BaseOptions():
     
         parser.add_argument('--apply_spectral_norm', action='store_true', help='Whether to apply SN.')
 
+        ## conditional model
+        parser.add_argument('--conditional', action='store_true', help='train a conditional model')
+        parser.add_argument('--label_embed_dim', type=int, default=32)
+        parser.add_argument('--num_labels_A', type=int, default=1) # for clean
+        parser.add_argument('--num_labels_B', type=int, default=100) # for noisy
+        parser.add_argument('--label_A_path', type=int, default=None) # for clean
+        parser.add_argument('--label_B_path', type=int, default=None) # for noisy
+
         self.initialized = True
         return parser
 

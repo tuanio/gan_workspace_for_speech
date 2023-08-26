@@ -1,6 +1,6 @@
 import torch
 import itertools
-from util.image_pool import ImagePool
+from util.image_pool import ConditionalImagePool
 from .base_model import BaseModel
 from . import networks
 
@@ -15,8 +15,8 @@ class ConditionalGANModel(BaseModel):
             parser.add_argument('--lambda_identity', type=float, default=0.5, help='use identity mapping. Setting lambda_identity other than 0 has an effect of scaling the weight of the identity mapping loss. For example, if the weight of the identity loss should be 10 times smaller than the weight of the reconstruction loss, please set lambda_identity = 0.1')
             parser.add_argument('--constant-gp', type=float, default=100, help='constant of gradient')
             parser.add_argument('--lambda-gp', type=float, default=0.1, help='gradient penalty')
-            parser.add_argument('--model_name', type=str, default='cond_unet_128_mask')
-
+            parser.add_argument('--model_name', type=str, default='unet_128_mask')
+            
         return parser
 
     def __init__(self, opt, data_shape=(129, 128)):
@@ -46,14 +46,20 @@ class ConditionalGANModel(BaseModel):
         # define networks (both Generators and discriminators)
         # The naming is different from those used in the paper.
         # Code (vs. paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
+        # swap between number of label, A -> G() -> B will take domain B label and vice versa
         self.netG_A = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, args.model_name, opt.norm,
                                         not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids,
                                         use_mask = opt.use_mask, raw_feat=opt.raw_feat, data_shape=data_shape,
-                                        spectral_norm=opt.apply_spectral_norm)
+                                        spectral_norm=opt.apply_spectral_norm,
+                                        condition=opt.conditional, nlabels=opt.num_labels_B,
+                                        embed_dim=opt.label_embed_dim)
+
         self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, args.model_name, opt.norm,
                                         not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids,
                                         use_mask = opt.use_mask, raw_feat=opt.raw_feat, data_shape=data_shape,
-                                        spectral_norm=opt.apply_spectral_norm)
+                                        spectral_norm=opt.apply_spectral_norm,
+                                        condition=opt.conditional, nlabels=opt.num_labels_A,
+                                        embed_dim=opt.label_embed_dim)
 
         if self.isTrain:  # define discriminators
             self.netD_A = networks.define_D(opt.output_nc, opt.ndf, opt.netD,
@@ -73,11 +79,11 @@ class ConditionalGANModel(BaseModel):
         if self.isTrain:
             if opt.lambda_identity > 0.0:  # only works when input and output images have the same number of channels
                 assert(opt.input_nc == opt.output_nc)
-            self.fake_A_pool = ImagePool(opt.pool_size)  # create image buffer to store previously generated images
-            self.fake_B_pool = ImagePool(opt.pool_size)  # create image buffer to store previously generated images
+            self.fake_A_pool = ConditionalImagePool(opt.pool_size, opt.num_labels_A)  # create image buffer to store previously generated images
+            self.fake_B_pool = ConditionalImagePool(opt.pool_size, opt.num_labels_B)  # create image buffer to store previously generated images
             if opt.use_cycled_discriminators:
-                self.rec_A_pool = ImagePool(opt.pool_size)  # create image buffer to store previously generated images
-                self.rec_B_pool = ImagePool(opt.pool_size)  # create image buffer to store previously generated images
+                self.rec_A_pool = ConditionalImagePool(opt.pool_size, opt.num_labels_A)  # create image buffer to store previously generated images
+                self.rec_B_pool = ConditionalImagePool(opt.pool_size, opt.num_labels_B)  # create image buffer to store previously generated images
             # define loss functions
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)  # define GAN loss.
             self.criterionCycle = torch.nn.L1Loss()
@@ -102,6 +108,9 @@ class ConditionalGANModel(BaseModel):
         if self.opt.use_mask:
             self.A_mask = input['A_mask' if AtoB else 'B_mask'].to(self.device)
             self.B_mask = input['B_mask' if AtoB else 'A_mask'].to(self.device)
+        
+        self.label_A = input['label_B' if AtoB else 'label_A'].to(self.device)
+        self.label_B = input['label_A' if AtoB else 'label_B'].to(self.device)
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
@@ -112,11 +121,11 @@ class ConditionalGANModel(BaseModel):
             self.fake_A = self.netG_B(self.real_B)  # G_B(B)
             self.rec_B = self.netG_A(self.fake_A)   # G_A(G_B(B))
         else:
-            self.fake_B = self.netG_A(self.real_A, self.A_mask)  # G_A(A)
-            self.rec_A = self.netG_B(self.fake_B, torch.ones(self.fake_B.size(0),1,self.fake_B.size(2),self.fake_B.size(3)))   # G_B(G_A(A))
+            self.fake_B = self.netG_A(self.real_A, self.A_mask, self.label_A)  # G_A(A)
+            self.rec_A = self.netG_B(self.fake_B, torch.ones(self.fake_B.size(0),1,self.fake_B.size(2),self.fake_B.size(3)), self.label_B)   # G_B(G_A(A))
 
-            self.fake_A = self.netG_B(self.real_B, self.B_mask)  # G_B(B)
-            self.rec_B = self.netG_A(self.fake_A , torch.ones(self.fake_A.size(0),1,self.fake_A.size(2),self.fake_A.size(3)))   # G_A(G_B(B))
+            self.fake_A = self.netG_B(self.real_B, self.B_mask, self.label_B)  # G_B(B)
+            self.rec_B = self.netG_A(self.fake_A , torch.ones(self.fake_A.size(0),1,self.fake_A.size(2),self.fake_A.size(3)), self.label_A)   # G_A(G_B(B))
 
     def backward_D_basic(self, netD, real, fake):
         """Calculate GAN loss for the discriminator
@@ -170,10 +179,10 @@ class ConditionalGANModel(BaseModel):
         if lambda_idt > 0:
             # G_A should be identity if real_B is fed: ||G_A(B) - B||
             if self.opt.use_mask:
-                self.idt_A  = self.netG_A(self.real_B, torch.ones(self.real_B.size(0),1,self.real_B.size(2),self.real_B.size(3)))
+                self.idt_A  = self.netG_A(self.real_B, torch.ones(self.real_B.size(0),1,self.real_B.size(2),self.real_B.size(3)), self.label_A)
                 self.loss_idt_A = self.criterionIdt(self.idt_A, self.real_B) * lambda_B * lambda_idt
                 # G_B should be identity if real_A is fed: ||G_B(A) - A||
-                self.idt_B  = self.netG_B(self.real_A, torch.ones(self.real_A.size(0),1,self.real_A.size(2),self.real_A.size(3)))
+                self.idt_B  = self.netG_B(self.real_A, torch.ones(self.real_A.size(0),1,self.real_A.size(2),self.real_A.size(3)), self.label_B)
                 self.loss_idt_B = self.criterionIdt(self.idt_B, self.real_A) * lambda_A * lambda_idt
             else:
                 self.idt_A  = self.netG_A(self.real_B)

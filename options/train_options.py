@@ -45,6 +45,6 @@ class TrainOptions(BaseOptions):
 
         parser.add_argument('--G-update-frequency', type=int, default=1)
         parser.add_argument('--D-update-frequency', type=int, default=5)
-
+        
         self.isTrain = True
         return parser

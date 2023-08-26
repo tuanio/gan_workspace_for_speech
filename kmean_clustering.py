@@ -16,7 +16,7 @@ parser.add_argument('--n-clusters', default=50)
 parser.add_argument('--name', default='train_cd92')
 parser.add_argument('--min-duration', default=0.5)
 parser.add_argument('--save-dir', default='/home/stud_vantuan/share_with_150/data_CD/cluster')
-parser.add_argument('--data-dir', default='/home/stud_vantuan/share_with_150/data_CD/train_CD92/wav')
+parser.add_argument('--data-dir', default='/home/stud_vantuan/share_with_150/data_CD/train_CD92/wav')   
 parser.add_argument('--gpu-id', default=0)
 args = parser.parse_args()
 
@@ -74,3 +74,6 @@ with open(os.path.join(SAVE_DIR, save_path), 'w') as f:
         f.write(f'{p} {l}')
         flag = True
 print("Write file... done!")
+
+# need to save the current KMean model and/or distribution of clusters to 
+# use later

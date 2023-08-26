@@ -188,11 +188,11 @@ class AudioDataset(BaseDataset):
         BaseDataset.__init__(self,opt)
         print(f'Initializing Dataset for {opt.phase} mode.')
         self.dir_A = os.path.join(opt.dataroot,opt.class_ids[0],opt.phase)
-        self.A_paths = sorted(make_dataset_audio(self.dir_A, opt.max_dataset_size))
+        self.A_paths = sorted(make_dataset_audio(self.dir_A, opt.max_dataset_size, opt.label_A_path))
         
         if not opt.single_direction:
             self.dir_B = os.path.join(opt.dataroot,opt.class_ids[1],opt.phase)
-            self.B_paths = sorted(make_dataset_audio(self.dir_B, opt.max_dataset_size))
+            self.B_paths = sorted(make_dataset_audio(self.dir_B, opt.max_dataset_size, opt.label_B_path))
 
 
         self.opt=opt
