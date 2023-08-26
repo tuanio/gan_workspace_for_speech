@@ -244,7 +244,7 @@ class AudioDataset(BaseDataset):
         self.clean_spec_paths = []
         self.clean_comp_dict = OrderedDict()
 
-        for nameA, countA in zip(self.A_paths, self.no_comps_clean):  # Having an OrderedDict to access no. of components, so we can wait before generation to collect all components
+        for nameA, countA in zip([i[0] for i in self.A_paths], self.no_comps_clean):  # Having an OrderedDict to access no. of components, so we can wait before generation to collect all components
             self.clean_spec_paths += [nameA] * countA
             self.clean_comp_dict[nameA] = countA
 
@@ -266,7 +266,7 @@ class AudioDataset(BaseDataset):
 
             self.noisy_spec_paths = []
             self.noisy_comp_dict = OrderedDict()
-            for nameB, countB in zip(self.B_paths, self.no_comps_noisy):
+            for nameB, countB in zip([i[0] for i in self.B_paths], self.no_comps_noisy):
                 self.noisy_spec_paths += [nameB] * countB
                 self.noisy_comp_dict[nameB] = countB
             self.noisy_specs = list(chain.from_iterable(self.noisy_specs))
