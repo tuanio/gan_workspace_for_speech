@@ -119,7 +119,7 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
     init_weights(net, init_type, init_gain=init_gain)
     return net
 
-def cal_gradient_penalty(netD, real_data, fake_data, device, type='mixed', constant=1.0, lambda_gp=10.0):
+def cal_gradient_penalty(netD, real_data, fake_data, device, type='mixed', constant=1.0, lambda_gp=10.0, label=None):
     """Calculate the gradient penalty loss, used in WGAN-GP paper https://arxiv.org/abs/1704.00028
 
     Arguments:
@@ -145,7 +145,10 @@ def cal_gradient_penalty(netD, real_data, fake_data, device, type='mixed', const
         else:
             raise NotImplementedError('{} not implemented'.format(type))
         interpolatesv.requires_grad_(True)
-        disc_interpolates = netD(interpolatesv)
+        if label is None:
+            disc_interpolates = netD(interpolatesv)
+        else:
+            disc_interpolates = netD(interpolatesv, label)
         gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolatesv,
                                         grad_outputs=torch.ones(disc_interpolates.size()).to(device),
                                         create_graph=True, retain_graph=True, only_inputs=True)
