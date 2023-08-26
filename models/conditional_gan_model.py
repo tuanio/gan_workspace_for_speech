@@ -135,7 +135,7 @@ class ConditionalGANModel(BaseModel):
             self.fake_A = self.netG_B(self.real_B, self.B_mask, self.label_B)  # G_B(B)
             self.rec_B = self.netG_A(self.fake_A , torch.ones(self.fake_A.size(0),1,self.fake_A.size(2),self.fake_A.size(3)), self.label_A)   # G_A(G_B(B))
 
-    def backward_D_basic(self, netD, real, fake):
+    def backward_D_basic(self, netD, real, fake, label):
         """Calculate GAN loss for the discriminator
         Parameters:
             netD (network)      -- the discriminator D
@@ -145,10 +145,10 @@ class ConditionalGANModel(BaseModel):
         We also call loss_D.backward() to calculate the gradients.
         """
         # Real
-        pred_real = netD(real)
+        pred_real = netD(real, label)
         loss_D_real = self.criterionGAN(pred_real, True)
         # Fake
-        pred_fake = netD(fake.detach())
+        pred_fake = netD(fake.detach(), label)
         loss_D_fake = self.criterionGAN(pred_fake, False)
         # Combined loss and calculate gradients
         loss_D = (loss_D_real + loss_D_fake) * 0.5 + networks.cal_gradient_penalty(netD, real_data=real,
@@ -161,22 +161,22 @@ class ConditionalGANModel(BaseModel):
     def backward_D_A(self, labels=None):
         """Calculate GAN loss for discriminator D_A"""
         fake_B = self.fake_B_pool.query(self.fake_B, labels)
-        self.loss_D_A = self.backward_D_basic(self.netD_A, self.real_B, fake_B)
+        self.loss_D_A = self.backward_D_basic(self.netD_A, self.real_B, fake_B, labels)
 
     def backward_D_B(self, labels=None):
         """Calculate GAN loss for discriminator D_B"""
         fake_A = self.fake_A_pool.query(self.fake_A, labels)
-        self.loss_D_B = self.backward_D_basic(self.netD_B, self.real_A, fake_A)
+        self.loss_D_B = self.backward_D_basic(self.netD_B, self.real_A, fake_A, labels)
     
     def backward_D2_A(self, labels=None):
         """Calculate GAN loss for discriminator D2_A"""
         rec_A = self.rec_A_pool.query(self.rec_A, labels)
-        self.loss_D2_A = self.backward_D_basic(self.netD2_A, self.real_A, rec_A)
+        self.loss_D2_A = self.backward_D_basic(self.netD2_A, self.real_A, rec_A, labels)
 
     def backward_D2_B(self, labels=None):
         """Calculate GAN loss for discriminator D2_B"""
         rec_B = self.rec_B_pool.query(self.rec_B, labels)
-        self.loss_D2_B = self.backward_D_basic(self.netD2_B, self.real_B, rec_B)
+        self.loss_D2_B = self.backward_D_basic(self.netD2_B, self.real_B, rec_B, labels)
 
     def backward_G(self):
         """Calculate the loss for generators G_A and G_B"""
