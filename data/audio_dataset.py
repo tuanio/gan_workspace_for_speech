@@ -233,7 +233,9 @@ class AudioDataset(BaseDataset):
         partial_process_input = partial(processInput, is_clean=True, **params)
 
         #Compute the spectrogram components parallelly to make it more efficient; uses Joblib, maintains order of input data passed.
-        self.clean_specs, self.clean_labels = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(partial_process_input)(p, self.spec_power, self.phase, self.channels, self.opt.use_phase, label=label) for p, label in self.A_paths)
+        clean_specs = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(partial_process_input)(p, self.spec_power, self.phase, self.channels, self.opt.use_phase, label=label) for p, label in self.A_paths)
+        self.clean_specs = [i[0] for i in clean_specs]
+        self.clean_labels = [i[1] for i in clean_specs]
         #self.clean_specs = [processInput(i, self.spec_power, self.phase, self.channels) for i in self.A_paths]
 
         #calculate no. of components in each sample
@@ -257,7 +259,9 @@ class AudioDataset(BaseDataset):
             
             partial_process_input_noisy = partial(processInput, is_clean=False, **params)
 
-            self.noisy_specs, self.noisy_labels = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(partial_process_input_noisy)(p, self.spec_power, self.phase, self.channels, self.opt.use_phase, label=label) for p, label in self.B_paths)
+            noisy_specs = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(partial_process_input_noisy)(p, self.spec_power, self.phase, self.channels, self.opt.use_phase, label=label) for p, label in self.B_paths)
+            self.noisy_specs = [i[0] for i in noisy_specs]
+            self.noisy_labels = [i[1] for i in noisy_specs]
             self.no_comps_noisy = Parallel(n_jobs=self.num_cores, prefer="threads")(delayed(countComps)(i) for i in self.noisy_specs)
 
             self.noisy_spec_paths = []
