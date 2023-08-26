@@ -150,24 +150,24 @@ class ConditionalGANModel(BaseModel):
         loss_D.backward()
         return loss_D
 
-    def backward_D_A(self):
+    def backward_D_A(self, labels=None):
         """Calculate GAN loss for discriminator D_A"""
-        fake_B = self.fake_B_pool.query(self.fake_B)
+        fake_B = self.fake_B_pool.query(self.fake_B, labels)
         self.loss_D_A = self.backward_D_basic(self.netD_A, self.real_B, fake_B)
 
-    def backward_D_B(self):
+    def backward_D_B(self, labels=None):
         """Calculate GAN loss for discriminator D_B"""
-        fake_A = self.fake_A_pool.query(self.fake_A)
+        fake_A = self.fake_A_pool.query(self.fake_A, labels)
         self.loss_D_B = self.backward_D_basic(self.netD_B, self.real_A, fake_A)
     
-    def backward_D2_A(self):
+    def backward_D2_A(self, labels=None):
         """Calculate GAN loss for discriminator D2_A"""
-        rec_A = self.rec_A_pool.query(self.rec_A)
+        rec_A = self.rec_A_pool.query(self.rec_A, labels)
         self.loss_D2_A = self.backward_D_basic(self.netD2_A, self.real_A, rec_A)
 
-    def backward_D2_B(self):
+    def backward_D2_B(self, labels=None):
         """Calculate GAN loss for discriminator D2_B"""
-        rec_B = self.rec_B_pool.query(self.rec_B)
+        rec_B = self.rec_B_pool.query(self.rec_B, labels)
         self.loss_D2_B = self.backward_D_basic(self.netD2_B, self.real_B, rec_B)
 
     def backward_G(self):
@@ -231,10 +231,10 @@ class ConditionalGANModel(BaseModel):
             # D_A and D_B
             self.set_requires_grad([self.netD_A, self.netD_B], True)
             self.optimizer_D.zero_grad()   # set D_A and D_B's gradients to zero
-            self.backward_D_A()      # calculate gradients for D_A
-            self.backward_D_B()      # calculate graidents for D_B
+            self.backward_D_A(self.label_A)      # calculate gradients for D_A
+            self.backward_D_B(self.label_B)      # calculate graidents for D_B
             if self.opt.use_cycled_discriminators:
-                self.backward_D2_A()      # calculate gradients for D2_A
-                self.backward_D2_B()      # calculate graidents for D2_B
+                self.backward_D2_A(self.label_A)      # calculate gradients for D2_A
+                self.backward_D2_B(self.label_B)      # calculate graidents for D2_B
             self.optimizer_D.step()  # update D_A and D_B's weights
 
