@@ -47,14 +47,14 @@ class ConditionalGANModel(BaseModel):
         # The naming is different from those used in the paper.
         # Code (vs. paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
         # swap between number of label, A -> G() -> B will take domain B label and vice versa
-        self.netG_A = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, args.model_name, opt.norm,
+        self.netG_A = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.model_name, opt.norm,
                                         not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids,
                                         use_mask = opt.use_mask, raw_feat=opt.raw_feat, data_shape=data_shape,
                                         spectral_norm=opt.apply_spectral_norm,
                                         condition=opt.conditional, nlabels=opt.num_labels_B,
                                         embed_dim=opt.label_embed_dim)
 
-        self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, args.model_name, opt.norm,
+        self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, opt.model_name, opt.norm,
                                         not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids,
                                         use_mask = opt.use_mask, raw_feat=opt.raw_feat, data_shape=data_shape,
                                         spectral_norm=opt.apply_spectral_norm,
