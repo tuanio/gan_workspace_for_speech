@@ -58,30 +58,30 @@ python train.py \
     --wandb-run-name unet_gan_${config}
 
 # ---
-python test.py \
-    --dataroot /home/stud_vantuan/share_with_150/cache/cd92_10h_9h_cond \
-    --name cond_unet_gan_cond_dim32_unet128_label.clean1_noisy100_10h_9h_100epochs \
-    --model conditional_gan \
-    --model_name unet_128_mask \
-    --dataset_mode audio \
-    --norm instance \
-    --phase test \
-    --load_size_h 129 \
-    --load_size_w 128 \
-    --crop_size 128 \
-    --no_dropout \
-    --batch_size 1 \
-    --gpu_ids 2 \
-    --input_nc 3 \
-    --output_nc 1 \
-    --raw-feat \
-    --use_mask \
-    --apply_spectral_norm \
-    --conditional \
-    --label_embed_dim 32 \
-    --num_labels_A 1 \
-    --num_labels_B 100 \
-    --label_B_path /home/stud_vantuan/share_with_150/cache/cd92_10h_9h_cond/label/generated_test_noisy_cd93_based_on_cd92_100.clusters
+# python test.py \
+#     --dataroot /home/stud_vantuan/share_with_150/cache/cd92_10h_9h_cond \
+#     --name cond_unet_gan_cond_dim32_unet128_label.clean1_noisy100_10h_9h_100epochs \
+#     --model conditional_gan \
+#     --model_name unet_128_mask \
+#     --dataset_mode audio \
+#     --norm instance \
+#     --phase test \
+#     --load_size_h 129 \
+#     --load_size_w 128 \
+#     --crop_size 128 \
+#     --no_dropout \
+#     --batch_size 1 \
+#     --gpu_ids 2 \
+#     --input_nc 3 \
+#     --output_nc 1 \
+#     --raw-feat \
+#     --use_mask \
+#     --apply_spectral_norm \
+#     --conditional \
+#     --label_embed_dim 32 \
+#     --num_labels_A 1 \
+#     --num_labels_B 100 \
+#     --label_B_path /home/stud_vantuan/share_with_150/cache/cd92_10h_9h_cond/label/generated_test_noisy_cd93_based_on_cd92_100.clusters
 
 # 
 # python test.py \
