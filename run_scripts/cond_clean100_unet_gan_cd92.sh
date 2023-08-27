@@ -4,7 +4,7 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd92_10h_9h_cond
 checkpoints_dir=checkpoints/
 gpu_ids=0
-config=cond_dim32_unet128_label.clean100_noisy100_10h_9h_200epochs
+config=cond_dim32_unet128_label.clean100_noisy100_10h_9h_100epochs
 
 # unet_128_mask, unet_256_mask
 
