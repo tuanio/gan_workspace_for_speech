@@ -3,7 +3,7 @@
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd93_1h_subset_cd92_cluster46_over100
 data_cache=/home/stud_vantuan/share_with_150/cache/cd92_10h_9h_cond
 checkpoints_dir=checkpoints/
-gpu_ids=1
+gpu_ids=2
 config=cond_detach_dim32_unet128_label.clean1_noisy100_10h_9h_100epochs
 
 # unet_128_mask, unet_256_mask
