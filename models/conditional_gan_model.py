@@ -154,7 +154,7 @@ class ConditionalGANModel(BaseModel):
                                                             fake_data=fake.detach(), device=self.device,
                                                             constant=self.opt.constant_gp,
                                                             lambda_gp=self.opt.lambda_gp,
-                                                            label=label)[0]
+                                                            label=label.detach())[0]
         loss_D.backward()
         return loss_D
 
