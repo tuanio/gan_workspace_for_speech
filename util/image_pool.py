@@ -79,7 +79,7 @@ class ConditionalImagePool():
 
         return_images = []
         for image, label in zip(images, labels):
-            image = torch.unsqueeze(image.data, 0)
+            image = torch.unsqueeze(image.data.cpu(), 0)
             if self.num_imgs[label] < self.pool_size:   # if the buffer is not full; keep inserting current images to the buffer
                 self.num_imgs[label] += 1
                 self.images[label].append(image)
@@ -94,5 +94,5 @@ class ConditionalImagePool():
                 else:       # by another 50% chance, the buffer will return the current image
                     return_images.append(image)
         return_images = torch.cat(return_images, 0)   # collect all the images and return
-        return return_images
+        return return_images.to(images.device)
         

@@ -131,8 +131,8 @@ class ConditionalGANModel(BaseModel):
             self.fake_B = self.netG_A(self.real_A, self.A_mask, self.label_A)  # G_A(A)
             self.rec_A = self.netG_B(self.fake_B, torch.ones(self.fake_B.size(0),1,self.fake_B.size(2),self.fake_B.size(3)), self.label_B)   # G_B(G_A(A))
 
-            self.fake_A = self.netG_B(self.real_B, self.B_mask, self.label_B.detach())  # G_B(B)
-            self.rec_B = self.netG_A(self.fake_A , torch.ones(self.fake_A.size(0),1,self.fake_A.size(2),self.fake_A.size(3)), self.label_A.detach())   # G_A(G_B(B))
+            self.fake_A = self.netG_B(self.real_B, self.B_mask, self.label_B)  # G_B(B)
+            self.rec_B = self.netG_A(self.fake_A , torch.ones(self.fake_A.size(0),1,self.fake_A.size(2),self.fake_A.size(3)), self.label_A)   # G_A(G_B(B))
 
     def backward_D_basic(self, netD, real, fake, label):
         """Calculate GAN loss for the discriminator
@@ -160,22 +160,22 @@ class ConditionalGANModel(BaseModel):
 
     def backward_D_A(self, labels=None):
         """Calculate GAN loss for discriminator D_A"""
-        fake_B = self.fake_B_pool.query(self.fake_B, labels)
+        fake_B = self.fake_B_pool.query(self.fake_B, labels).to(self.device)
         self.loss_D_A = self.backward_D_basic(self.netD_A, self.real_B, fake_B, labels)
 
     def backward_D_B(self, labels=None):
         """Calculate GAN loss for discriminator D_B"""
-        fake_A = self.fake_A_pool.query(self.fake_A, labels)
+        fake_A = self.fake_A_pool.query(self.fake_A, labels).to(self.device)
         self.loss_D_B = self.backward_D_basic(self.netD_B, self.real_A, fake_A, labels)
     
     def backward_D2_A(self, labels=None):
         """Calculate GAN loss for discriminator D2_A"""
-        rec_A = self.rec_A_pool.query(self.rec_A, labels)
+        rec_A = self.rec_A_pool.query(self.rec_A, labels).to(self.device)
         self.loss_D2_A = self.backward_D_basic(self.netD2_A, self.real_A, rec_A, labels)
 
     def backward_D2_B(self, labels=None):
         """Calculate GAN loss for discriminator D2_B"""
-        rec_B = self.rec_B_pool.query(self.rec_B, labels)
+        rec_B = self.rec_B_pool.query(self.rec_B, labels).to(self.device)
         self.loss_D2_B = self.backward_D_basic(self.netD2_B, self.real_B, rec_B, labels)
 
     def backward_G(self):
@@ -187,10 +187,10 @@ class ConditionalGANModel(BaseModel):
         if lambda_idt > 0:
             # G_A should be identity if real_B is fed: ||G_A(B) - B||
             if self.opt.use_mask:
-                self.idt_A  = self.netG_A(self.real_B, torch.ones(self.real_B.size(0),1,self.real_B.size(2),self.real_B.size(3)), self.label_A.detach())
+                self.idt_A  = self.netG_A(self.real_B, torch.ones(self.real_B.size(0),1,self.real_B.size(2),self.real_B.size(3)), self.label_A)
                 self.loss_idt_A = self.criterionIdt(self.idt_A, self.real_B) * lambda_B * lambda_idt
                 # G_B should be identity if real_A is fed: ||G_B(A) - A||
-                self.idt_B  = self.netG_B(self.real_A, torch.ones(self.real_A.size(0),1,self.real_A.size(2),self.real_A.size(3)), self.label_B.detach())
+                self.idt_B  = self.netG_B(self.real_A, torch.ones(self.real_A.size(0),1,self.real_A.size(2),self.real_A.size(3)), self.label_B)
                 self.loss_idt_B = self.criterionIdt(self.idt_B, self.real_A) * lambda_A * lambda_idt
             else:
                 self.idt_A  = self.netG_A(self.real_B)
@@ -203,14 +203,14 @@ class ConditionalGANModel(BaseModel):
             self.loss_idt_B = 0
 
         # GAN loss D_A(G_A(A))
-        self.loss_G_A = self.criterionGAN(self.netD_A(self.fake_B, self.label_A.detach()), True)
+        self.loss_G_A = self.criterionGAN(self.netD_A(self.fake_B, self.label_A), True)
         # GAN loss D_B(G_B(B))
-        self.loss_G_B = self.criterionGAN(self.netD_B(self.fake_A, self.label_B.detach()), True)
+        self.loss_G_B = self.criterionGAN(self.netD_B(self.fake_A, self.label_B), True)
         if self.opt.use_cycled_discriminators:
             # Cycled Adversarial loss D2_A(G_B(G_A(A)))
-            self.loss_G2_A = self.criterionGAN(self.netD2_A(self.rec_A, self.label_B.detach()), True)
+            self.loss_G2_A = self.criterionGAN(self.netD2_A(self.rec_A, self.label_B), True)
             # Cycled Adversarial loss D2_B(G_A(G_B(B)))
-            self.loss_G2_B = self.criterionGAN(self.netD2_B(self.rec_B, self.label_A.detach()), True)
+            self.loss_G2_B = self.criterionGAN(self.netD2_B(self.rec_B, self.label_A), True)
         else:
             self.loss_G2_A = 0
             self.loss_G2_B = 0
@@ -239,10 +239,10 @@ class ConditionalGANModel(BaseModel):
             # D_A and D_B
             self.set_requires_grad([self.netD_A, self.netD_B], True)
             self.optimizer_D.zero_grad()   # set D_A and D_B's gradients to zero
-            self.backward_D_A(self.label_A.detach())      # calculate gradients for D_A
-            self.backward_D_B(self.label_B.detach())      # calculate graidents for D_B
+            self.backward_D_A(self.label_A)      # calculate gradients for D_A
+            self.backward_D_B(self.label_B)      # calculate graidents for D_B
             if self.opt.use_cycled_discriminators:
-                self.backward_D2_A(self.label_B.detach())      # calculate gradients for D2_A
-                self.backward_D2_B(self.label_A.detach())      # calculate graidents for D2_B
+                self.backward_D2_A(self.label_B)      # calculate gradients for D2_A
+                self.backward_D2_B(self.label_A)      # calculate graidents for D2_B
             self.optimizer_D.step()  # update D_A and D_B's weights
 
