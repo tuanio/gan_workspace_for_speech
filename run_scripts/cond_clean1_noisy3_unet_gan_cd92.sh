@@ -4,7 +4,7 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd93_1h_subset_cd92_cluster46_over100
 checkpoints_dir=checkpoints/
 gpu_ids=3
-config=cond_dim3_unet128_label.clean1_noisy3_500file_173file_100epochs
+config=cond_dim3_ngf48_unet128_label.clean1_noisy3_500file_173file_200epochs
 
 # unet_128_mask, unet_256_mask
 
@@ -25,6 +25,7 @@ python train.py \
     --crop_size 128 \
     --preprocess none \
     --batch_size 1 \
+    --ngf 48 \
     --lr_G 0.0001 \
     --lr_D 0.0001 \
     --G-update-frequency 1 \
