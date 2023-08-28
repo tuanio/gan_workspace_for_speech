@@ -1000,6 +1000,10 @@ class MultiInputSequential(nn.Sequential):
                 inputs = module(inputs)
         return inputs
 
+class MultiInputIdentity(nn.Module):
+    def forward(self, *inputs):
+        return inputs[0]
+
 class UnetSkipConnectionBlock(nn.Module):
     """Defines the Unet submodule with skip connection.
         X -------------------identity----------------------
@@ -1039,6 +1043,9 @@ class UnetSkipConnectionBlock(nn.Module):
         uprelu = nn.ReLU(True)
         upnorm = norm_layer(outer_nc)
 
+        if submodule is None:
+            submodule = MultiInputIdentity()
+
         if not innermost:
             if outermost:
                 upconv = nn.ConvTranspose2d(inner_nc * 2, outer_nc,
@@ -1058,7 +1065,6 @@ class UnetSkipConnectionBlock(nn.Module):
                 if use_dropout:
                     up += [nn.Dropout(0.5)]
             
-            self.submodule = submodule
         else:
             upconv = nn.ConvTranspose2d(inner_nc, outer_nc,
                                         kernel_size=4, stride=2,
@@ -1070,6 +1076,7 @@ class UnetSkipConnectionBlock(nn.Module):
             if self.label_emb:
                 self.downsample_conv = nn.Conv2d(self.label_emb.embed_dim + inner_nc, inner_nc, 1, 1)
         
+        self.submodule = submodule
         self.down = nn.Sequential(*down)
         self.up = nn.Sequential(*up)
 
@@ -1085,6 +1092,163 @@ class UnetSkipConnectionBlock(nn.Module):
             else:
                 xx = self.submodule(xx, y)
             return torch.cat([x, self.up(xx)], 1)
+
+class MultiInputIdentity(nn.Module):
+    def forward(self, *inputs):
+        return inputs[0]
+
+class Unet1DSkipConnectionBlock(nn.Module):
+    """Defines the Unet submodule with skip connection.
+        X -------------------identity----------------------
+        |-- downsampling -- |submodule| -- upsampling --|
+    """
+
+    def __init__(self, outer_nc, inner_nc,
+                 submodule=None, outermost=False, innermost=False, norm_layer=nn.BatchNorm2d,
+                 use_dropout=False, raw_feat: bool = False, outermost_kernelsize: bool = 4, stride=2,
+                 label_emb=None):
+        """Construct a Unet submodule with skip connections.
+
+        Parameters:
+            outer_nc (int) -- the number of filters in the outer conv layer
+            inner_nc (int) -- the number of filters in the inner conv layer
+            input_nc (int) -- the number of channels in input images/features
+            submodule (UnetSkipConnectionBlock) -- previously defined submodules
+            outermost (bool)    -- if this module is the outermost module
+            innermost (bool)    -- if this module is the innermost module
+            norm_layer          -- normalization layer
+            user_dropout (bool) -- if use dropout layers.
+        """
+        super(Unet1DSkipConnectionBlock, self).__init__()
+        self.outermost = outermost
+        self.label_emb = label_emb
+        self.innermost = innermost
+        if type(norm_layer) == functools.partial:
+            use_bias = norm_layer.func == nn.InstanceNorm1d
+        else:
+            use_bias = norm_layer == nn.InstanceNorm1d
+        downconv = nn.Conv1d(outer_nc, inner_nc, kernel_size=2,
+                             stride=stride, padding=1, bias=use_bias)
+        downrelu = nn.LeakyReLU(0.2, True)
+        downnorm = norm_layer(inner_nc)
+        uprelu = nn.ReLU(True)
+        upnorm = norm_layer(outer_nc)
+
+        if submodule is None:
+            submodule = MultiInputIdentity()
+
+        if not innermost:
+            if outermost:
+                upconv = nn.ConvTranspose1d(inner_nc, outer_nc,
+                                            kernel_size=outermost_kernelsize, stride=stride,
+                                            padding=1)
+                down = [downconv]
+                up = [uprelu, upconv]
+                if not raw_feat:
+                    up += [nn.Tanh()]
+            else:
+                upconv = nn.ConvTranspose1d(inner_nc * 2, outer_nc,
+                                            kernel_size=2, stride=stride,
+                                            padding=1, bias=use_bias)
+                down = [downrelu, downconv, downnorm]
+                up = [uprelu, upconv, upnorm]
+
+                if use_dropout:
+                    up += [nn.Dropout(0.5)]
+            
+        else:
+            upconv = nn.ConvTranspose1d(inner_nc, outer_nc,
+                                        kernel_size=2, stride=stride,
+                                        padding=1, bias=use_bias)
+            down = [downrelu, downconv]
+            up = [uprelu, upconv, upnorm]
+            # model = down + up
+            
+            if self.label_emb:
+                self.downsample_conv = nn.Conv1d(self.label_emb.embed_dim + inner_nc, inner_nc, 1, 1)
+        
+        self.submodule = submodule
+        self.down = nn.Sequential(*down)
+        self.up = nn.Sequential(*up)
+
+    def forward(self, x, y=None):
+        print("Input:", x.size())
+        xx = self.down(x)
+        print("Go down done:", xx.size())
+        if self.outermost:
+            xx = self.submodule(xx, y)
+            print("After submodule above above:", xx.size())
+            print(self.up)
+            return self.up(xx)
+        else:
+            if self.label_emb and y is not None:
+                emb = self.label_emb(y).unsqueeze(-1).unsqueeze(-1)
+                xx = torch.cat([xx, emb], dim=1)
+                xx = self.downsample_conv(xx)
+            else:
+                print("Submodule here:", xx.size())
+                xx = self.submodule(xx, y)
+                print("After submodule above:", xx.size())
+            print("Going here:")
+            print(self.up)
+            print("UP:", self.up(xx).size())
+            print("Original input:", x.size())
+            return torch.cat([x, self.up(xx)], 1)
+
+class MaskUnet1DGenerator(nn.Module):
+    """Create a Unet-based generator"""
+
+    def __init__(self, input_nc, output_nc, num_downs, norm_layer=nn.BatchNorm2d,
+                    use_dropout=False, data_shape=(129, 128),
+                    condition=False, nlabels=100, label_embed_dim=32):
+        """Construct a Unet generator
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            output_nc (int) -- the number of channels in output images
+            num_downs (int) -- the number of downsamplings in UNet. For example, # if |num_downs| == 7,
+                                image of size 128x128 will become of size 1x1 # at the bottleneck
+            ngf (int)       -- the number of filters in the last conv layer
+            norm_layer      -- normalization layer
+
+        We construct the U-Net from the innermost layer to the outermost layer.
+        It is a recursive process.
+        """
+        super(MaskUnet1DGenerator, self).__init__()
+        # (129, 128) -> (5, 4)
+        # (257, 257) -> (5, 5)
+
+        if condition:
+            label_emb = UnitNormEmbedding(nlabels=nlabels, embed_dim=label_embed_dim)
+        else:
+            label_emb = None
+
+        stride = 2
+
+        # multiply by two because of mask
+        # convole the mask with 1 kernel and 1 stride
+        self.conv_mask = nn.Conv1d(input_nc * 2, input_nc, 1, 1)
+
+        # construct unet structure
+        unet_block = Unet1DSkipConnectionBlock(input_nc * 8, input_nc * 8, submodule=None,
+                                            norm_layer=norm_layer, innermost=True, label_emb=label_emb, stride=stride)
+                                             # add the innermost layer
+        for i in range(num_downs - 5):          # add intermediate layers with ngf * 8 filters
+            unet_block = Unet1DSkipConnectionBlock(input_nc * 8, input_nc * 8, submodule=unet_block, norm_layer=norm_layer, use_dropout=use_dropout, stride=stride)
+        # gradually reduce the number of filters from input_nc * 8 to input_nc
+        unet_block = Unet1DSkipConnectionBlock(input_nc * 4, input_nc * 8, submodule=unet_block, norm_layer=norm_layer, stride=stride)
+        unet_block = Unet1DSkipConnectionBlock(input_nc * 2, input_nc * 4, submodule=unet_block, norm_layer=norm_layer, stride=stride)
+        unet_block = Unet1DSkipConnectionBlock(input_nc, input_nc * 2, submodule=unet_block, norm_layer=norm_layer, stride=stride)
+        self.model = Unet1DSkipConnectionBlock(output_nc, input_nc,
+                                                submodule=unet_block, outermost=True,
+                                                norm_layer=norm_layer, raw_feat=True, stride=stride,
+                                                outermost_kernelsize=(4,))  # add the outermost layer
+
+
+    def forward(self, input, mask, label=None):
+        """Standard forward"""
+        x = torch.cat([input, mask], dim=1)
+        x = self.conv_mask(x)
+        return self.model(x, label)
 
 class NLayerDiscriminator(nn.Module):
     """Defines a PatchGAN discriminator"""
