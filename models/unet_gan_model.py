@@ -15,7 +15,6 @@ class UnetGANModel(BaseModel):
             parser.add_argument('--lambda_identity', type=float, default=0.5, help='use identity mapping. Setting lambda_identity other than 0 has an effect of scaling the weight of the identity mapping loss. For example, if the weight of the identity loss should be 10 times smaller than the weight of the reconstruction loss, please set lambda_identity = 0.1')
             parser.add_argument('--constant-gp', type=float, default=100, help='constant of gradient')
             parser.add_argument('--lambda-gp', type=float, default=0.1, help='gradient penalty')
-            parser.add_argument('--model_name', type=str, default='unet_128_mask')
 
         return parser
 
