@@ -343,7 +343,7 @@ def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal'
     net = None
     norm_layer = get_norm_layer(norm_type=norm)
 
-    if netD == 'basic' and condition:
+    if netD == 'basic':
         if condition:
             net = NLayerConditionalDiscriminator(input_nc, ndf, n_layers=3,
                                                 norm_layer=norm_layer,
