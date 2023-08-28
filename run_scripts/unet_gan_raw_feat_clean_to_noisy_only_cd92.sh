@@ -30,6 +30,7 @@ python train.py \
     --D-update-frequency 1 \
     --constant-gp 1 \
     --lambda-gp 0.05 \
+    --ngf 48 \
     --niter 80 \
     --niter_decay 70 \
     --gpu_ids $gpu_ids \

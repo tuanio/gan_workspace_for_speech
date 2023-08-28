@@ -20,7 +20,7 @@ class ImagePool():
             self.num_imgs = 0
             self.images = []
 
-    def query(self, images, labels):
+    def query(self, images):
         """Return an image from the pool.
 
         Parameters:
