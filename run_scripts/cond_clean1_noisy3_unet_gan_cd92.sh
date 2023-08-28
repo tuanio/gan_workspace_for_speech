@@ -4,7 +4,7 @@
 data_cache=/home/stud_vantuan/share_with_150/cache/cd93_1h_subset_cd92_cluster46_over100
 checkpoints_dir=checkpoints/
 gpu_ids=3
-config=cond_dim3_unet128_label.clean1_noisy3_1000file_342file_100epochs
+config=cond_dim3_unet128_label.clean1_noisy3_500file_173file_100epochs
 
 # unet_128_mask, unet_256_mask
 
@@ -19,7 +19,7 @@ python train.py \
     --norm instance \
     --lambda_A 10 \
     --lambda_B 10 \
-    --lambda_identity 1 \
+    --lambda_identity 0.5 \
     --load_size_h 129 \
     --load_size_w 128 \
     --crop_size 128 \
@@ -30,7 +30,7 @@ python train.py \
     --G-update-frequency 1 \
     --D-update-frequency 1 \
     --constant-gp 1 \
-    --lambda-gp 0.1 \
+    --lambda-gp 0.05 \
     --conditional \
     --label_embed_dim 10 \
     --num_labels_A 1 \
