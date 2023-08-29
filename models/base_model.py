@@ -44,6 +44,17 @@ class BaseModel(ABC):
         self.metric = 0  # used for learning rate policy 'plateau'
 
     @staticmethod
+    def dict_grad_hook_factory(add_func=lambda x: x):
+        saved_dict = dict()
+
+        def hook_gen(name):
+            def grad_hook(grad):
+                saved_vals = add_func(grad)
+                saved_dict[name] = saved_vals
+            return grad_hook
+        return hook_gen, saved_dict
+
+    @staticmethod
     def modify_commandline_options(parser, is_train):
         """Add new model-specific options, and rewrite default values for existing options.
 
@@ -108,6 +119,12 @@ class BaseModel(ABC):
     def compute_visuals(self):
         """Calculate additional output images for visdom and HTML visualization"""
         pass
+
+    def parallelize(self):
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                setattr(self, 'net' + name, torch.nn.DataParallel(net, self.opt.gpu_ids))
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""

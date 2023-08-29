@@ -97,8 +97,8 @@ python train.py \
 
 # # 
 python test.py \
-    --dataroot /home/stud_vantuan/share_with_150/cache/cd93_1h_subset_cd92_cluster46_over100 \
-    --name unet_gan_cluster46_1h.clean_13m.noisy_200epochs \
+    --dataroot /home/stud_vantuan/share_with_150/cache/cd92.93_95_old_with_1h_clean_and_30m_noisy \
+    --name unet_gan_unet128_cluster46_1h.clean_13m.noisy_120epochs \
     --model unet_gan \
     --dataset_mode audio \
     --norm instance \
@@ -108,7 +108,7 @@ python test.py \
     --crop_size 128 \
     --no_dropout \
     --batch_size 1 \
-    --gpu_ids 1 \
+    --gpu_ids 2 \
     --input_nc 1 \
     --output_nc 1 \
     --raw-feat \
