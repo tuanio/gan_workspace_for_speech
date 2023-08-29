@@ -2,7 +2,7 @@
 # data_cache=/home/stud_vantuan/share_with_150/cache/cd_data_5h_clean_2.5h_noisy
 data_cache=/home/stud_vantuan/share_with_150/cache/cd93_and_92_noisy_only_larger
 checkpoints_dir=checkpoints/
-gpu_ids=2
+gpu_ids=0
 config=ngf64_unet128_cd93_to_cd92_noise_only_larger_200epochs
 
 # unet_128_mask, unet_256_mask
