@@ -26,6 +26,9 @@ python train.py \
     --batch_size 1 \
     --lr_G 0.0001 \
     --lr_D 0.0001 \
+    --threshold-to-cut 30 \
+    --minimum-start-end 100 \
+    --cut-noisy \
     --G-update-frequency 1 \
     --D-update-frequency 1 \
     --constant-gp 1 \
@@ -63,7 +66,7 @@ python test.py \
     --crop_size 128 \
     --no_dropout \
     --batch_size 1 \
-    --gpu_ids 2 \
+    --gpu_ids 3 \
     --input_nc 1 \
     --output_nc 1 \
     --raw-feat \
