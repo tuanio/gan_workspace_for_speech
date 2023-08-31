@@ -59,8 +59,8 @@ python train.py \
 
 # ---
 python test.py \
-    --dataroot /home/stud_vantuan/share_with_150/cache/test_only/ \
-    --name cond_unet_cond_dim3_ngf48_unet128_label.clean1_noisy3_500file_173file_200epochs \
+    --dataroot /home/stud_vantuan/share_with_150/cache/test_only \
+    --name cond_unet_gan_cond_dim3_ngf48_unet128_label.clean1_noisy3_500file_173file_200epochs \
     --model conditional_gan \
     --model_name unet_128_mask \
     --ngf 48 \
